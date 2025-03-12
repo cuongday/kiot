@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.qad.posbe.domain.User;
 import com.qad.posbe.domain.request.CreateUserDTO;
+import com.qad.posbe.domain.request.UpdateUserDTO;
 import com.qad.posbe.domain.response.ResUpdateUserDTO;
 import com.qad.posbe.domain.response.ResUserDTO;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
@@ -82,12 +83,16 @@ public class UserController {
         return ResponseEntity.ok(null);
     }
 
-    @PutMapping("/users")
+    @PutMapping("/users/{id}")
     @ApiMessage("Update user by id")
-    public ResponseEntity<ResUpdateUserDTO> updateUser(@RequestBody User user) throws IdInvalidException {
-        User userUpdate = this.userService.handleUpdateUser(user);
+    public ResponseEntity<ResUpdateUserDTO> updateUser(
+            @PathVariable("id") Long id,
+            @Valid @ModelAttribute UpdateUserDTO formRequest,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatarFile
+        ) throws IdInvalidException {
+        User userUpdate = this.userService.handleUpdateUser(id, formRequest, avatarFile);
         if(userUpdate == null) {
-            throw new IdInvalidException("User với id = " + user.getId() + " không tồn tại");
+            throw new IdInvalidException("User với id = " + id + " không tồn tại");
         }
         return ResponseEntity.ok(this.userService.convertToResUpdateUserDTO(userUpdate));
     }

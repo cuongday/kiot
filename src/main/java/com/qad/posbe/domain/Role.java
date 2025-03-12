@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 // import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import com.qad.posbe.util.SecurityUtil;
 
@@ -17,6 +19,8 @@ import java.util.List;
 @Table(name = "roles")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 @Builder
 public class Role {

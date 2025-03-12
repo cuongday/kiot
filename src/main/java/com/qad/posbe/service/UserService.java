@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.qad.posbe.domain.Role;
 import com.qad.posbe.domain.User;
 import com.qad.posbe.domain.request.CreateUserDTO;
+import com.qad.posbe.domain.request.UpdateUserDTO;
 import com.qad.posbe.domain.response.ResCreateUserDTO;
 import com.qad.posbe.domain.response.ResUpdateUserDTO;
 import com.qad.posbe.domain.response.ResUserDTO;
@@ -31,7 +32,7 @@ public class UserService {
 
     public User handleCreateUser(User user, MultipartFile avatarFile) {
         if (avatarFile != null && !avatarFile.isEmpty()) {
-            String avatarUrl = cloudinaryService.uploadImage(avatarFile);
+            String avatarUrl = this.cloudinaryService.uploadImage(avatarFile);
             user.setAvatar(avatarUrl);
         }
 
@@ -77,19 +78,24 @@ public class UserService {
         return rs;
     }
 
-    public User handleUpdateUser(User reqUser) {
-        User currentUser = this.fetchUserById(reqUser.getId());
+    public User handleUpdateUser(Long userId, UpdateUserDTO reqUser, MultipartFile avatarFile) {
+        User currentUser = this.fetchUserById(userId);
+
         if (currentUser!=null) {
             currentUser.setAddress(reqUser.getAddress());
             currentUser.setGender(reqUser.getGender());
             currentUser.setName(reqUser.getName());
-        }
 
-        if(reqUser.getRole() != null){
-            Role r = this.roleService.fetchRoleById(reqUser.getRole().getId());
-            currentUser.setRole(r != null ? r : null);
-        }
+            if(avatarFile != null && !avatarFile.isEmpty()){
+                String avatarUrl = this.cloudinaryService.uploadImage(avatarFile);
+                currentUser.setAvatar(avatarUrl);
+            }
 
+            if(reqUser.getRoleId() != null){
+                Role r = this.roleService.fetchRoleById(reqUser.getRoleId());
+                currentUser.setRole(r != null ? r : null);
+            }
+        }
         currentUser = this.userRepository.save(currentUser);
         return currentUser;
     }

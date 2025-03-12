@@ -69,14 +69,15 @@ public class AuthController {
         this.userService.updateUserToken(refresh_token, loginDTO.getUsername());
 
         //set cookies
-        ResponseCookie resCookies = ResponseCookie.from("refresh_token", refresh_token)
-                .httpOnly(true)
-                .maxAge(refreshTokenExpiration)
-                .path("/")
-                .build();
+        // ResponseCookie resCookies = ResponseCookie.from("refresh_token", refresh_token)
+        //         .httpOnly(true)
+        //         .maxAge(refreshTokenExpiration)
+        //         .path("/")
+        //         .build();
+
+        res.setRefreshToken(refresh_token);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, resCookies.toString())
                 .body(res);
 
 

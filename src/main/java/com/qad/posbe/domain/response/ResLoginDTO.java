@@ -14,6 +14,10 @@ public class ResLoginDTO {
     private String accessToken;
     private UserLogin user;
 
+    @JsonProperty("refresh_token")
+    private String refreshToken;
+
+
     @Getter
     @Setter
     @AllArgsConstructor
