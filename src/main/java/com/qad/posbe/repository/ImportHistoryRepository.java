@@ -1,0 +1,14 @@
+package com.qad.posbe.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import com.qad.posbe.domain.ImportHistory;
+import com.qad.posbe.domain.Supplier;
+import com.qad.posbe.domain.User;
+
+import java.util.List;
+
+public interface ImportHistoryRepository extends JpaRepository<ImportHistory, Long>, JpaSpecificationExecutor<ImportHistory> {
+    List<ImportHistory> findByUser(User user);
+    List<ImportHistory> findBySupplier(Supplier supplier);
+} 
