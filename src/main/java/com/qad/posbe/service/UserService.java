@@ -16,7 +16,6 @@ import com.qad.posbe.domain.response.ResUpdateUserDTO;
 import com.qad.posbe.domain.response.ResUserDTO;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
 import com.qad.posbe.repository.UserRepository;
-import com.qad.posbe.util.constant.GenderEnum;
 
 import java.util.List;
 import java.util.Optional;

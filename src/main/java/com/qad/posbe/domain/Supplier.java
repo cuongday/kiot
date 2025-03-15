@@ -1,65 +1,57 @@
 package com.qad.posbe.domain;
 
-// import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.qad.posbe.util.SecurityUtil;
-import com.qad.posbe.util.constant.GenderEnum;
-
 import java.time.Instant;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.qad.posbe.util.SecurityUtil;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
 @Entity
-@Table(name = "users")
+@Table(name = "suppliers")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class User  {
-
+public class Supplier {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @NotNull
-    @Size(min = 2, message = "Tên phải có ít nhất 2 ký tự")
     String name;
+    String description;
+    String image;
 
-    @NotNull
-    @Size(min = 3, message = "Tên đăng nhập phải có ít nhất 3 ký tự")
-    String username;
-
-    @NotNull
-    @Size(min = 3, message = "Password phải có ít nhất 3 ký tự")
-    String password;
-    @Enumerated(EnumType.STRING)
-    GenderEnum gender;
-    String address;
-    String avatar;
-    @Column(columnDefinition = "MEDIUMTEXT")
-    String refreshToken;
     Instant createdAt;
     Instant updatedAt;
     String createdBy;
     String updatedBy;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
-
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "supplier")
     @JsonIgnore
-    private List<Order> orders;
+    private List<SupplierCategory> supplierCategories;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "supplier")
     @JsonIgnore
     private List<ImportHistory> importHistories;
+
+    @OneToMany(mappedBy = "supplier")
+    @JsonIgnore
+    private List<Product> products;
 
     @PrePersist
     public void handleBeforeCreate() {
@@ -76,4 +68,6 @@ public class User  {
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
     }
+    
+
 }
