@@ -2,6 +2,7 @@ package com.qad.posbe.domain.request;
 
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class UpdateSupplierDTO {
@@ -9,4 +10,6 @@ public class UpdateSupplierDTO {
     private String name;
     
     private String description;
+    
+    private List<Long> categoryIds;
 } 

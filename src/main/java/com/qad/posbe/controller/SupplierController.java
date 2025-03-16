@@ -28,6 +28,8 @@ import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -58,7 +60,7 @@ public class SupplierController {
         
         Supplier supplier = this.supplierMapper.toEntity(supplierDTO);
         
-        Supplier newSupplier = this.supplierService.handleCreateSupplier(supplier, imageFile);
+        Supplier newSupplier = this.supplierService.handleCreateSupplier(supplier, imageFile, supplierDTO.getCategoryIds());
         return ResponseEntity.status(HttpStatus.CREATED).body(newSupplier);
     }
 
@@ -74,7 +76,7 @@ public class SupplierController {
             throw new IdInvalidException("Nhà cung cấp với id = " + id + " không tồn tại");
         }   
         this.supplierMapper.updateEntityFromDto(supplierDTO, supplier);
-        Supplier updatedSupplier = this.supplierService.handleUpdateSupplier(id, supplier, imageFile);
+        Supplier updatedSupplier = this.supplierService.handleUpdateSupplier(id, supplier, imageFile, supplierDTO.getCategoryIds());
         return ResponseEntity.ok(updatedSupplier);
     }
 
@@ -97,5 +99,16 @@ public class SupplierController {
             throw new IdInvalidException("Nhà cung cấp với id = " + id + " không tồn tại");
         }
         return ResponseEntity.ok(supplier);
+    }
+    
+    @GetMapping("/suppliers/{id}/categories")
+    @ApiMessage("Get categories of supplier")
+    public ResponseEntity<List<Long>> getSupplierCategories(@PathVariable("id") Long id) throws IdInvalidException {
+        Supplier supplier = this.supplierService.fetchSupplierById(id);
+        if(supplier == null) {
+            throw new IdInvalidException("Nhà cung cấp với id = " + id + " không tồn tại");
+        }
+        List<Long> categoryIds = this.supplierService.getCategoryIdsBySupplier(id);
+        return ResponseEntity.ok(categoryIds);
     }
 }

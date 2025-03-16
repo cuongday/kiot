@@ -1,15 +1,23 @@
 package com.qad.posbe.service;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.qad.posbe.domain.Category;
 import com.qad.posbe.domain.Supplier;
+import com.qad.posbe.domain.SupplierCategory;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
+import com.qad.posbe.repository.CategoryRepository;
+import com.qad.posbe.repository.SupplierCategoryRepository;
 import com.qad.posbe.repository.SupplierRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,25 +27,53 @@ import lombok.RequiredArgsConstructor;
 public class SupplierService {
     private final SupplierRepository supplierRepository;
     private final CloudinaryService cloudinaryService;
+    private final CategoryRepository categoryRepository;
+    private final SupplierCategoryRepository supplierCategoryRepository;
 
-    public Supplier handleCreateSupplier(Supplier supplier, MultipartFile imageFile) {
+    @Transactional
+    public Supplier handleCreateSupplier(Supplier supplier, MultipartFile imageFile, List<Long> categoryIds) {
+        // Xử lý file ảnh
         if (imageFile != null && !imageFile.isEmpty()) {
             String imageUrl = this.cloudinaryService.uploadImage(imageFile);
             supplier.setImage(imageUrl);
         }
-        return supplierRepository.save(supplier);
+        
+        // Lưu supplier trước để có ID
+        Supplier savedSupplier = supplierRepository.save(supplier);
+        
+        // Xử lý danh sách category
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            for (Long categoryId : categoryIds) {
+                Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+                if (categoryOpt.isPresent()) {
+                    SupplierCategory supplierCategory = new SupplierCategory();
+                    supplierCategory.setSupplier(savedSupplier);
+                    supplierCategory.setCategory(categoryOpt.get());
+                    supplierCategory.setCreatedAt(Instant.now());
+                    supplierCategoryRepository.save(supplierCategory);
+                }
+            }
+        }
+        
+        return savedSupplier;
     }
 
+    @Transactional
     public void handleDeleteSupplier(Long id) {
+        // Tìm tất cả các mối quan hệ và xóa chúng
+        Supplier supplier = fetchSupplierById(id);
+        if (supplier != null) {
+            List<SupplierCategory> relations = supplierCategoryRepository.findBySupplier(supplier);
+            supplierCategoryRepository.deleteAll(relations);
+        }
+        
+        // Sau đó xóa supplier
         this.supplierRepository.deleteById(id);
     }
 
     public Supplier fetchSupplierById(Long id) {
         Optional<Supplier> supplierOptional = this.supplierRepository.findById(id);
-        if (supplierOptional.isPresent()) {
-            return supplierOptional.get();
-        }
-        return null;
+        return supplierOptional.orElse(null);
     }
 
     public ResultPaginationDTO handleGetSupplier(Specification<Supplier> supplierSpec, Pageable pageable) {
@@ -55,15 +91,59 @@ public class SupplierService {
         return rs;
     }
 
-    public Supplier handleUpdateSupplier(Long id, Supplier supplier, MultipartFile imageFile) {
+    @Transactional
+    public Supplier handleUpdateSupplier(Long id, Supplier supplier, MultipartFile imageFile, List<Long> categoryIds) {
+        System.out.println("Nhận được categoryIds: " + categoryIds);
+        
+        // Xử lý file ảnh
         if (imageFile != null && !imageFile.isEmpty()) {
             String imageUrl = this.cloudinaryService.uploadImage(imageFile);
             supplier.setImage(imageUrl);
         }
-        return this.supplierRepository.save(supplier);
+        
+        // Đảm bảo ID đúng
+        supplier.setId(id);
+        
+        // Lưu supplier
+        Supplier updatedSupplier = this.supplierRepository.save(supplier);
+        supplierRepository.flush();
+        
+        // Xử lý danh sách category
+        if (categoryIds != null) {
+            // Xóa tất cả các mối quan hệ hiện tại
+            List<SupplierCategory> existingRelations = supplierCategoryRepository.findBySupplier(updatedSupplier);
+            supplierCategoryRepository.deleteAll(existingRelations);
+            
+            // Tạo mối quan hệ mới
+            for (Long categoryId : categoryIds) {
+                Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+                if (categoryOpt.isPresent()) {
+                    SupplierCategory supplierCategory = new SupplierCategory();
+                    supplierCategory.setSupplier(updatedSupplier);
+                    supplierCategory.setCategory(categoryOpt.get());
+                    supplierCategory.setCreatedAt(Instant.now());
+                    supplierCategoryRepository.save(supplierCategory);
+                }
+            }
+        }
+        
+        // Truy vấn lại từ DB để có dữ liệu mới nhất
+        return supplierRepository.findById(id).orElse(null);
     }
 
     public boolean existsByName(String name) {
         return this.supplierRepository.existsByName(name);
+    }
+    
+    public List<Long> getCategoryIdsBySupplier(Long supplierId) {
+        Supplier supplier = fetchSupplierById(supplierId);
+        if (supplier == null) {
+            return new ArrayList<>();
+        }
+        
+        List<SupplierCategory> relations = supplierCategoryRepository.findBySupplier(supplier);
+        return relations.stream()
+                .map(rel -> rel.getCategory().getId())
+                .toList();
     }
 }
