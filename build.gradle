@@ -13,6 +13,11 @@ java {
     }
 }
 
+// Thêm cấu hình để lưu thông tin tên tham số
+compileJava {
+    options.compilerArgs += ['-parameters']
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor

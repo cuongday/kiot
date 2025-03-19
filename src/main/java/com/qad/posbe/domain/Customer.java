@@ -1,7 +1,6 @@
 package com.qad.posbe.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -9,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qad.posbe.util.SecurityUtil;
-import com.qad.posbe.util.constant.GenderEnum;
 
 import java.time.Instant;
 import java.util.List;
@@ -31,6 +29,9 @@ public class Customer {
 
     @Pattern(regexp = "^0[0-9]{9}$", message = "Số điện thoại phải bắt đầu bằng số 0 và có 10 ký tự")
     String phone;
+
+    long point;
+    boolean isActive;
 
     Instant createdAt;
     Instant updatedAt;
