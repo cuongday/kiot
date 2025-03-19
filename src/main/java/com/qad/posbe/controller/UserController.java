@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +30,8 @@ import com.qad.posbe.util.error.IdInvalidException;
 public class UserController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
-
+    
+    @PreAuthorize("hasRole('admin')")
     @PostMapping(value = "/users", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Create new user")
     public ResponseEntity<ResCreateUserDTO> createNewUser(
@@ -49,6 +51,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.convertToResCreateUserDTO(newUser));
     }
 
+    @PreAuthorize("hasRole('admin')")
     @GetMapping("/users/{id}")
     @ApiMessage("fetch user by id")
     public ResponseEntity<ResUserDTO> getUserById(@PathVariable("id") Long id) throws IdInvalidException {
@@ -60,6 +63,7 @@ public class UserController {
                 .body(this.userService.convertToResUserDTO(fetchUser));
     }
 
+    @PreAuthorize("hasRole('admin')")
     @GetMapping("/users")
     @ApiMessage("Fetch all user")
     public ResponseEntity<ResultPaginationDTO> fetchAllUser(
@@ -70,7 +74,7 @@ public class UserController {
         return ResponseEntity.ok(rs);
     }
 
-
+    @PreAuthorize("hasRole('admin')")
     @DeleteMapping("/users/{id}")
     @ApiMessage("Delete user by id")
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id)
@@ -83,6 +87,7 @@ public class UserController {
         return ResponseEntity.ok(null);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @PutMapping("/users/{id}")
     @ApiMessage("Update user by id")
     public ResponseEntity<ResUpdateUserDTO> updateUser(

@@ -1,5 +1,7 @@
 package com.qad.posbe.domain.request;
 
+import java.time.Instant;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -24,7 +26,7 @@ public class CreateProductDTO {
 
     private Integer quantity;
     private String status;
-    
+    private Instant date;
     @NotNull(message = "Nhà cung cấp không được để trống")
     private Long supplierId;
     

@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import com.qad.posbe.domain.Category;
@@ -35,6 +36,7 @@ public class CategoryController {
     private final CategoryService categoryService;
     private final CategoryMapper categoryMapper;
 
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/categories")
     @ApiMessage("Lấy tất cả danh mục")
     public ResponseEntity<ResultPaginationDTO> getCategories(
@@ -45,6 +47,7 @@ public class CategoryController {
         return ResponseEntity.ok(rs);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @PostMapping(value = "/categories", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Tạo danh mục mới")
     public ResponseEntity<Category> createCategory(
@@ -62,6 +65,7 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newCategory);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @PutMapping(value = "/categories/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Cập nhật danh mục theo id")
     public ResponseEntity<Category> updateCategory(
@@ -78,6 +82,7 @@ public class CategoryController {
         return ResponseEntity.ok(updatedCategory);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @DeleteMapping("/categories/{id}")
     @ApiMessage("Xóa danh mục theo id")
     public ResponseEntity<Void> deleteCategory(@PathVariable("id") Long id) throws IdInvalidException {
@@ -89,6 +94,7 @@ public class CategoryController {
         return ResponseEntity.ok(null);
     }
 
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/categories/{id}")
     @ApiMessage("Lấy danh mục theo id")
     public ResponseEntity<Category> getCategoryById(@PathVariable("id") Long id) throws IdInvalidException {

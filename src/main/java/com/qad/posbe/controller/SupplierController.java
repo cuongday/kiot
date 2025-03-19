@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import com.qad.posbe.domain.Supplier;
@@ -37,6 +38,7 @@ public class SupplierController {
     private final SupplierService supplierService;
     private final SupplierMapper supplierMapper;
 
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/suppliers")
     @ApiMessage("Get all suppliers")
     public ResponseEntity<ResultPaginationDTO> getSuppliers(
@@ -47,6 +49,7 @@ public class SupplierController {
         return ResponseEntity.ok(rs);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @PostMapping(value = "/suppliers", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Create new supplier")
     public ResponseEntity<Supplier> createSupplier(
@@ -64,6 +67,7 @@ public class SupplierController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newSupplier);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @PutMapping(value = "/suppliers/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Update supplier by id")
     public ResponseEntity<Supplier> updateSupplier(
@@ -80,6 +84,7 @@ public class SupplierController {
         return ResponseEntity.ok(updatedSupplier);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @DeleteMapping("/suppliers/{id}")
     @ApiMessage("Delete supplier by id")
     public ResponseEntity<Void> deleteSupplier(@PathVariable("id") Long id) throws IdInvalidException {
@@ -91,6 +96,7 @@ public class SupplierController {
         return ResponseEntity.ok(null);
     }
 
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/suppliers/{id}")
     @ApiMessage("Get supplier by id")
     public ResponseEntity<Supplier> getSupplierById(@PathVariable("id") Long id) throws IdInvalidException {
@@ -101,6 +107,7 @@ public class SupplierController {
         return ResponseEntity.ok(supplier);
     }
     
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/suppliers/{id}/categories")
     @ApiMessage("Get categories of supplier")
     public ResponseEntity<List<Long>> getSupplierCategories(@PathVariable("id") Long id) throws IdInvalidException {

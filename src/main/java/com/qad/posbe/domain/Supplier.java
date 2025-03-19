@@ -33,6 +33,8 @@ public class Supplier {
     Long id;
 
     String name;
+    
+    @Column(columnDefinition = "MEDIUMTEXT")
     String description;
     String image;
 

@@ -119,7 +119,8 @@ public class ProductService {
         existingProduct.setStatus(product.getStatus());
         existingProduct.setCategory(categoryOptional.get());
         existingProduct.setSupplier(supplierOptional.get());
-        
+        existingProduct.setDate(product.getDate());
+
         // Xử lý tải lên hình ảnh
         if (imageFile != null && !imageFile.isEmpty()) {
             String imageUrl = this.cloudinaryService.uploadImage(imageFile);

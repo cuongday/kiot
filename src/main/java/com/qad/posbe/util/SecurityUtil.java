@@ -47,10 +47,10 @@ public class SecurityUtil {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
-        //hardcode permission (for testing)
+        String role = resLoginDTO.getUser().getRole().getName();
         List<String> listAuthority = new ArrayList<String>();
-        listAuthority.add("ROLE_USER_CREATE");
-        listAuthority.add("ROLE_USER_UPDATE");
+        listAuthority.add("ROLE_" + role);
+    
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()

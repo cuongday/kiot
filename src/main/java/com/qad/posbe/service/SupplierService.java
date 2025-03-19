@@ -44,13 +44,12 @@ public class SupplierService {
         // Xử lý danh sách category
         if (categoryIds != null && !categoryIds.isEmpty()) {
             for (Long categoryId : categoryIds) {
-                Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+                Optional<Category> categoryOpt = this.categoryRepository.findById(categoryId);
                 if (categoryOpt.isPresent()) {
                     SupplierCategory supplierCategory = new SupplierCategory();
                     supplierCategory.setSupplier(savedSupplier);
                     supplierCategory.setCategory(categoryOpt.get());
-                    supplierCategory.setCreatedAt(Instant.now());
-                    supplierCategoryRepository.save(supplierCategory);
+                    this.supplierCategoryRepository.save(supplierCategory);
                 }
             }
         }

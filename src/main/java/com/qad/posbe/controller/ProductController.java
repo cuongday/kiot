@@ -18,6 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,7 @@ public class ProductController {
     private final ProductMapper productMapper;
 
     // Lấy tất cả sản phẩm với phân trang
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/products")
     @ApiMessage("Lấy tất cả sản phẩm")
     public ResponseEntity<ResultPaginationDTO> getProducts(
@@ -42,6 +44,7 @@ public class ProductController {
     }
 
     // Lấy chi tiết sản phẩm theo ID
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/products/{id}")
     @ApiMessage("Lấy sản phẩm theo id")
     public ResponseEntity<Product> getProductById(@PathVariable("id") Long id) throws IdInvalidException {
@@ -50,6 +53,7 @@ public class ProductController {
     }
 
     // Tạo sản phẩm mới
+    @PreAuthorize("hasRole('admin')")
     @PostMapping(value = "/products", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Tạo sản phẩm mới")
     public ResponseEntity<Product> createProduct(
@@ -75,6 +79,7 @@ public class ProductController {
     }
 
     // Cập nhật sản phẩm
+    @PreAuthorize("hasRole('admin')")
     @PutMapping(value = "/products/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Cập nhật sản phẩm theo id")
     public ResponseEntity<Product> updateProduct(
@@ -108,6 +113,7 @@ public class ProductController {
     }
 
     // Xóa sản phẩm
+    @PreAuthorize("hasRole('admin')")
     @DeleteMapping("/products/{id}")
     @ApiMessage("Xóa sản phẩm theo id")
     public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long id) throws IdInvalidException {
@@ -116,6 +122,7 @@ public class ProductController {
     }
 
     // Lấy sản phẩm theo danh mục
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/products/category/{categoryId}")
     @ApiMessage("Lấy sản phẩm theo danh mục")
     public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable("categoryId") Long categoryId) throws IdInvalidException {
@@ -123,6 +130,7 @@ public class ProductController {
     }
 
     // Lấy sản phẩm theo nhà cung cấp
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/products/supplier/{supplierId}")
     @ApiMessage("Lấy sản phẩm theo nhà cung cấp")
     public ResponseEntity<List<Product>> getProductsBySupplier(@PathVariable("supplierId") Long supplierId) throws IdInvalidException {

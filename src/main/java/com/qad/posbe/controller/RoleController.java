@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.qad.posbe.domain.Role;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
@@ -21,6 +22,7 @@ public class RoleController {
 
     private final RoleService roleService;
 
+    @PreAuthorize("hasRole('admin')")
     @PostMapping("/roles")
     @ApiMessage("Create role")
     public ResponseEntity<Role> createRole(@Valid @RequestBody Role role) throws IdInvalidException {
@@ -30,6 +32,7 @@ public class RoleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.roleService.createRole(role));
     }
 
+    @PreAuthorize("hasRole('admin')")
     @PutMapping("/roles")
     @ApiMessage("Update role")
     public ResponseEntity<Role> updateRole(@Valid @RequestBody Role role) throws IdInvalidException {
@@ -43,6 +46,7 @@ public class RoleController {
         return ResponseEntity.status(HttpStatus.OK).body(this.roleService.updateRole(role));
     }
 
+    @PreAuthorize("hasRole('admin')")
     @GetMapping("/roles")
     @ApiMessage("Get all roles")
     public ResponseEntity<ResultPaginationDTO> fetchRole(@Filter Specification<Role> spec, Pageable pageable){
@@ -50,6 +54,7 @@ public class RoleController {
     }
 
 
+    @PreAuthorize("hasRole('admin')")
     @DeleteMapping("/roles/{id}")
     @ApiMessage("Delete role")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) throws IdInvalidException {
@@ -61,6 +66,7 @@ public class RoleController {
         return ResponseEntity.ok().body(null);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @GetMapping("/roles/{id}")
     @ApiMessage("Fetch role by id")
     public ResponseEntity<Role> getById(@PathVariable Long id) throws IdInvalidException {

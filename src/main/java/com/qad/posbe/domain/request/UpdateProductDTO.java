@@ -1,5 +1,7 @@
 package com.qad.posbe.domain.request;
 
+import java.time.Instant;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -7,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,6 +27,7 @@ public class UpdateProductDTO {
     private Long price;
 
     private Integer quantity;
+    private Instant date;
     private String status;
     
     @NotNull(message = "Nhà cung cấp không được để trống")

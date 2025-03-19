@@ -41,6 +41,7 @@ public class Product  {
     int quantity;
     String image;
     String status;
+    Instant date;
 
     Instant createdAt;
     Instant updatedAt;
