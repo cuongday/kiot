@@ -26,13 +26,13 @@ import com.qad.posbe.util.error.IdInvalidException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     
     @PreAuthorize("hasRole('admin')")
-    @PostMapping(value = "/users", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Create new user")
     public ResponseEntity<ResCreateUserDTO> createNewUser(
             @Valid @ModelAttribute CreateUserDTO formRequest,
@@ -52,7 +52,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @GetMapping("/users/{id}")
+    @GetMapping("/{id}")
     @ApiMessage("fetch user by id")
     public ResponseEntity<ResUserDTO> getUserById(@PathVariable("id") Long id) throws IdInvalidException {
         User fetchUser = this.userService.fetchUserById(id);
@@ -64,7 +64,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @GetMapping("/users")
+    @GetMapping("")
     @ApiMessage("Fetch all user")
     public ResponseEntity<ResultPaginationDTO> fetchAllUser(
             @Filter Specification<User> userSpec,
@@ -75,7 +75,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @DeleteMapping("/users/{id}")
+    @DeleteMapping("/{id}")
     @ApiMessage("Delete user by id")
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id)
         throws IdInvalidException{
@@ -88,7 +88,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @PutMapping("/users/{id}")
+    @PutMapping("/{id}")
     @ApiMessage("Update user by id")
     public ResponseEntity<ResUpdateUserDTO> updateUser(
             @PathVariable("id") Long id,

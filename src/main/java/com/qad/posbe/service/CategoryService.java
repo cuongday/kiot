@@ -37,7 +37,10 @@ public class CategoryService {
 
     public Category fetchCategoryById(Long id) {
         Optional<Category> categoryOptional = this.categoryRepository.findById(id);
-        return categoryOptional.orElse(null);
+        if(categoryOptional.isPresent()) {
+            return categoryOptional.get();
+        }
+        return null;
     }
 
     public ResultPaginationDTO handleGetCategory(Specification<Category> categorySpec, Pageable pageable) {

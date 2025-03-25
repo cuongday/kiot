@@ -33,9 +33,13 @@ public class Product  {
     @Column(columnDefinition = "MEDIUMTEXT")
     String description;
 
-    //giá sản phẩm lớn hơn hoặc bằng 0
-    @Min(value = 0, message = "Giá sản phẩm phải lớn hơn hoặc bằng 0")
-    long price;
+    // Giá mua sản phẩm lớn hơn hoặc bằng 0
+    @Min(value = 0, message = "Giá mua sản phẩm phải lớn hơn hoặc bằng 0")
+    long buyPrice;
+
+    // Giá bán sản phẩm lớn hơn hoặc bằng 0
+    @Min(value = 0, message = "Giá bán sản phẩm phải lớn hơn hoặc bằng 0")
+    long sellPrice;
 
 
     int quantity;

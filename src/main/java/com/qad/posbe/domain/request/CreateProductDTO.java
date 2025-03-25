@@ -21,8 +21,11 @@ public class CreateProductDTO {
 
     private String description;
 
-    @Min(value = 0, message = "Giá sản phẩm phải lớn hơn hoặc bằng 0")
-    private Long price;
+    @Min(value = 0, message = "Giá mua sản phẩm phải lớn hơn hoặc bằng 0")
+    private Long buyPrice;
+    
+    @Min(value = 0, message = "Giá bán sản phẩm phải lớn hơn hoặc bằng 0")
+    private Long sellPrice;
 
     private Integer quantity;
     private String status;

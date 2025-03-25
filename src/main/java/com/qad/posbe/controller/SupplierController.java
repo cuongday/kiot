@@ -16,11 +16,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+
+import com.qad.posbe.domain.Category;
 import com.qad.posbe.domain.Supplier;
 import com.qad.posbe.domain.mapper.SupplierMapper;
 import com.qad.posbe.domain.request.CreateSupplierDTO;
 import com.qad.posbe.domain.request.UpdateSupplierDTO;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
+import com.qad.posbe.service.CategoryService;
 import com.qad.posbe.service.SupplierService;
 import com.qad.posbe.util.annotation.ApiMessage;
 import com.qad.posbe.util.error.IdInvalidException;
@@ -29,14 +32,16 @@ import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/suppliers")
 @RequiredArgsConstructor
 public class SupplierController {
     private final SupplierService supplierService;
     private final SupplierMapper supplierMapper;
+    private final CategoryService categoryService;
 
     @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("/suppliers")
@@ -50,8 +55,8 @@ public class SupplierController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @PostMapping(value = "/suppliers", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    @ApiMessage("Create new supplier")
+    @PostMapping(value = "", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @ApiMessage("Tạo nhà cung cấp thành công")
     public ResponseEntity<Supplier> createSupplier(
         @Valid @ModelAttribute CreateSupplierDTO supplierDTO,
         @RequestPart(value = "image", required = false) MultipartFile imageFile
@@ -68,8 +73,8 @@ public class SupplierController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @PutMapping(value = "/suppliers/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    @ApiMessage("Update supplier by id")
+    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @ApiMessage("Cập nhật nhà cung cấp thành công")
     public ResponseEntity<Supplier> updateSupplier(
         @PathVariable("id") Long id,
         @Valid @ModelAttribute UpdateSupplierDTO supplierDTO,
@@ -85,8 +90,8 @@ public class SupplierController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @DeleteMapping("/suppliers/{id}")
-    @ApiMessage("Delete supplier by id")
+    @DeleteMapping("/{id}")
+    @ApiMessage("Xóa nhà cung cấp thành công")
     public ResponseEntity<Void> deleteSupplier(@PathVariable("id") Long id) throws IdInvalidException {
         Supplier currentSupplier = this.supplierService.fetchSupplierById(id);
         if(currentSupplier == null) {
@@ -97,8 +102,8 @@ public class SupplierController {
     }
 
     @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @GetMapping("/suppliers/{id}")
-    @ApiMessage("Get supplier by id")
+    @GetMapping("/{id}")
+    @ApiMessage("Lấy nhà cung cấp theo ID thành công")
     public ResponseEntity<Supplier> getSupplierById(@PathVariable("id") Long id) throws IdInvalidException {
         Supplier supplier = this.supplierService.fetchSupplierById(id);
         if(supplier == null) {
@@ -108,14 +113,31 @@ public class SupplierController {
     }
     
     @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @GetMapping("/suppliers/{id}/categories")
+    @GetMapping("/{id}/categories")
     @ApiMessage("Get categories of supplier")
-    public ResponseEntity<List<Long>> getSupplierCategories(@PathVariable("id") Long id) throws IdInvalidException {
+    public ResponseEntity<List<Category>> getSupplierCategories(@PathVariable("id") Long id) throws IdInvalidException {
         Supplier supplier = this.supplierService.fetchSupplierById(id);
         if(supplier == null) {
             throw new IdInvalidException("Nhà cung cấp với id = " + id + " không tồn tại");
         }
         List<Long> categoryIds = this.supplierService.getCategoryIdsBySupplier(id);
-        return ResponseEntity.ok(categoryIds);
+        List<Category> categories = new ArrayList<>();
+        for(Long categoryId : categoryIds) {
+            Category category = this.categoryService.fetchCategoryById(categoryId);
+            if(category != null) {
+                categories.add(category);
+            }
+        }
+        return ResponseEntity.ok(categories);
+    }
+
+    @GetMapping("")
+    @ApiMessage("Lấy danh sách nhà cung cấp thành công")
+    public ResponseEntity<ResultPaginationDTO> getAllSuppliers(
+            @Filter Specification<Supplier> spec,
+            Pageable pageable
+    ) {
+        ResultPaginationDTO rs = this.supplierService.handleGetSupplier(spec, pageable);
+        return ResponseEntity.ok(rs);
     }
 }

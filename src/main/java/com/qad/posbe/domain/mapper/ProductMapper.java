@@ -13,7 +13,8 @@ public interface ProductMapper {
     // Ánh xạ từ CreateProductDTO sang Product
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "price", target = "price")
+    @Mapping(source = "buyPrice", target = "buyPrice")
+    @Mapping(source = "sellPrice", target = "sellPrice")
     @Mapping(source = "quantity", target = "quantity")
     @Mapping(source = "status", target = "status")
     @Mapping(target = "id", ignore = true)
@@ -31,7 +32,8 @@ public interface ProductMapper {
     // Cập nhật Product từ UpdateProductDTO
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "price", target = "price")
+    @Mapping(source = "buyPrice", target = "buyPrice")
+    @Mapping(source = "sellPrice", target = "sellPrice")
     @Mapping(source = "quantity", target = "quantity")
     @Mapping(source = "status", target = "status")
     @Mapping(target = "id", ignore = true)

@@ -25,105 +25,97 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
     private final ProductMapper productMapper;
 
-    // Lấy tất cả sản phẩm với phân trang
     @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @GetMapping("/products")
-    @ApiMessage("Lấy tất cả sản phẩm")
-    public ResponseEntity<ResultPaginationDTO> getProducts(
-            @Filter Specification<Product> productSpec,
+    @GetMapping("")
+    @ApiMessage("Lấy danh sách sản phẩm")
+    public ResponseEntity<ResultPaginationDTO> fetchAllProduct(
+            @Filter Specification<Product> spec,
             Pageable pageable
     ) {
-        ResultPaginationDTO rs = this.productService.getAll(productSpec, pageable);
+        ResultPaginationDTO rs = this.productService.getAll(spec, pageable);
         return ResponseEntity.ok(rs);
     }
 
-    // Lấy chi tiết sản phẩm theo ID
     @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @GetMapping("/products/{id}")
-    @ApiMessage("Lấy sản phẩm theo id")
-    public ResponseEntity<Product> getProductById(@PathVariable("id") Long id) throws IdInvalidException {
+    @GetMapping("/{id}")
+    @ApiMessage("Lấy sản phẩm theo ID")
+    public ResponseEntity<Product> getProduct(
+            @PathVariable("id") Long id
+    ) throws IdInvalidException {
         Product product = this.productService.getById(id);
         return ResponseEntity.ok(product);
     }
 
-    // Tạo sản phẩm mới
     @PreAuthorize("hasRole('admin')")
-    @PostMapping(value = "/products", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Tạo sản phẩm mới")
-    public ResponseEntity<Product> createProduct(
-            @Valid @ModelAttribute CreateProductDTO productDTO,
+    public ResponseEntity<Product> create(
+            @Valid @ModelAttribute CreateProductDTO createProductDTO,
             @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) throws IdInvalidException {
-        boolean isNameExist = this.productService.existsByName(productDTO.getName());
+        // Kiểm tra tên trùng lặp
+        boolean isNameExist = this.productService.existsByName(createProductDTO.getName());
         if(isNameExist) {
             throw new IdInvalidException("Tên sản phẩm đã tồn tại");
         }
         
-        Product product = this.productMapper.toEntity(productDTO);
-        
-        // Thiết lập Category và Supplier ID
-        product.setCategory(new com.qad.posbe.domain.Category());
-        product.getCategory().setId(productDTO.getCategoryId());
-        
-        product.setSupplier(new com.qad.posbe.domain.Supplier());
-        product.getSupplier().setId(productDTO.getSupplierId());
-        
-        Product newProduct = this.productService.handleCreateProduct(product, imageFile);
+        // Để service xử lý toàn bộ việc chuyển đổi DTO và lưu trữ
+        Product newProduct = this.productService.handleCreateProduct(createProductDTO, imageFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(newProduct);
     }
 
-    // Cập nhật sản phẩm
     @PreAuthorize("hasRole('admin')")
-    @PutMapping(value = "/products/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    @ApiMessage("Cập nhật sản phẩm theo id")
-    public ResponseEntity<Product> updateProduct(
+    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @ApiMessage("Cập nhật sản phẩm thành công")
+    public ResponseEntity<Product> update(
             @PathVariable("id") Long id,
-            @Valid @ModelAttribute UpdateProductDTO productDTO,
+            @Valid @ModelAttribute UpdateProductDTO updateProductDTO,
             @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) throws IdInvalidException {
         // Kiểm tra xem sản phẩm có tồn tại không
         this.productService.getById(id);
         
         // Đảm bảo ID trong DTO khớp với ID trong đường dẫn
-        productDTO.setId(id);
+        updateProductDTO.setId(id);
         
         // Kiểm tra nếu thay đổi tên, đảm bảo tên mới không trùng với sản phẩm khác
         Product existingProduct = this.productService.getById(id);
-        if (!existingProduct.getName().equals(productDTO.getName()) && this.productService.existsByName(productDTO.getName())) {
+        if (!existingProduct.getName().equals(updateProductDTO.getName()) && this.productService.existsByName(updateProductDTO.getName())) {
             throw new IdInvalidException("Sản phẩm với tên này đã tồn tại");
         }
         
-        this.productMapper.updateEntityFromDto(productDTO, existingProduct);
+        this.productMapper.updateEntityFromDto(updateProductDTO, existingProduct);
         
         // Thiết lập Category và Supplier ID
         existingProduct.setCategory(new com.qad.posbe.domain.Category());
-        existingProduct.getCategory().setId(productDTO.getCategoryId());
+        existingProduct.getCategory().setId(updateProductDTO.getCategoryId());
         
         existingProduct.setSupplier(new com.qad.posbe.domain.Supplier());
-        existingProduct.getSupplier().setId(productDTO.getSupplierId());
+        existingProduct.getSupplier().setId(updateProductDTO.getSupplierId());
         
         Product updatedProduct = this.productService.handleUpdateProduct(id, existingProduct, imageFile);
         return ResponseEntity.ok(updatedProduct);
     }
 
-    // Xóa sản phẩm
     @PreAuthorize("hasRole('admin')")
-    @DeleteMapping("/products/{id}")
-    @ApiMessage("Xóa sản phẩm theo id")
-    public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long id) throws IdInvalidException {
+    @DeleteMapping("/{id}")
+    @ApiMessage("Xóa sản phẩm thành công")
+    public ResponseEntity<Void> delete(
+            @PathVariable("id") Long id
+    ) throws IdInvalidException {
         this.productService.handleDeleteProduct(id);
         return ResponseEntity.ok().build();
     }
 
     // Lấy sản phẩm theo danh mục
     @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @GetMapping("/products/category/{categoryId}")
+    @GetMapping("/category/{categoryId}")
     @ApiMessage("Lấy sản phẩm theo danh mục")
     public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable("categoryId") Long categoryId) throws IdInvalidException {
         return ResponseEntity.ok(this.productService.getByCategory(categoryId));
@@ -131,7 +123,7 @@ public class ProductController {
 
     // Lấy sản phẩm theo nhà cung cấp
     @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @GetMapping("/products/supplier/{supplierId}")
+    @GetMapping("/supplier/{supplierId}")
     @ApiMessage("Lấy sản phẩm theo nhà cung cấp")
     public ResponseEntity<List<Product>> getProductsBySupplier(@PathVariable("supplierId") Long supplierId) throws IdInvalidException {
         return ResponseEntity.ok(productService.getBySupplier(supplierId));

@@ -3,6 +3,8 @@ package com.qad.posbe.service;
 import com.qad.posbe.domain.Category;
 import com.qad.posbe.domain.Product;
 import com.qad.posbe.domain.Supplier;
+import com.qad.posbe.domain.mapper.ProductMapper;
+import com.qad.posbe.domain.request.CreateProductDTO;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
 import com.qad.posbe.repository.CategoryRepository;
 import com.qad.posbe.repository.ProductRepository;
@@ -26,6 +28,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final SupplierRepository supplierRepository;
     private final CloudinaryService cloudinaryService;
+    private final ProductMapper productMapper;
 
     // Lấy tất cả sản phẩm
     public List<Product> getAll() {
@@ -67,17 +70,20 @@ public class ProductService {
 
     // Tạo sản phẩm mới
     @Transactional
-    public Product handleCreateProduct(Product product, MultipartFile imageFile) throws IdInvalidException {
+    public Product handleCreateProduct(CreateProductDTO dto, MultipartFile imageFile) throws IdInvalidException {
+        // Tạo entity từ DTO
+        Product product = productMapper.toEntity(dto);
+        
         // Lấy category từ ID
-        Optional<Category> categoryOptional = categoryRepository.findById(product.getCategory().getId());
+        Optional<Category> categoryOptional = categoryRepository.findById(dto.getCategoryId());
         if (categoryOptional.isEmpty()) {
-            throw new IdInvalidException("Không tìm thấy danh mục với ID: " + product.getCategory().getId());
+            throw new IdInvalidException("Không tìm thấy danh mục với ID: " + dto.getCategoryId());
         }
         
         // Lấy supplier từ ID
-        Optional<Supplier> supplierOptional = supplierRepository.findById(product.getSupplier().getId());
+        Optional<Supplier> supplierOptional = supplierRepository.findById(dto.getSupplierId());
         if (supplierOptional.isEmpty()) {
-            throw new IdInvalidException("Không tìm thấy nhà cung cấp với ID: " + product.getSupplier().getId());
+            throw new IdInvalidException("Không tìm thấy nhà cung cấp với ID: " + dto.getSupplierId());
         }
 
         product.setCategory(categoryOptional.get());
@@ -114,7 +120,8 @@ public class ProductService {
 
         existingProduct.setName(product.getName());
         existingProduct.setDescription(product.getDescription());
-        existingProduct.setPrice(product.getPrice());
+        existingProduct.setBuyPrice(product.getBuyPrice());
+        existingProduct.setSellPrice(product.getSellPrice());
         existingProduct.setQuantity(product.getQuantity());
         existingProduct.setStatus(product.getStatus());
         existingProduct.setCategory(categoryOptional.get());

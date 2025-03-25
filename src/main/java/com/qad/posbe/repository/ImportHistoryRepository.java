@@ -1,12 +1,11 @@
 package com.qad.posbe.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.stereotype.Repository;
-
 import com.qad.posbe.domain.ImportHistory;
 import com.qad.posbe.domain.Supplier;
 import com.qad.posbe.domain.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 

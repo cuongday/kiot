@@ -16,7 +16,9 @@ import com.qad.posbe.domain.response.ResUpdateUserDTO;
 import com.qad.posbe.domain.response.ResUserDTO;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
 import com.qad.posbe.repository.UserRepository;
+import com.qad.posbe.util.SecurityUtil;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -105,6 +107,16 @@ public class UserService {
 
     public boolean existsByUsername(String username) {
         return this.userRepository.existsByUsername(username);
+    }
+
+    public User getCurrentUser() {
+        String username = SecurityUtil.getCurrentUserLogin()
+            .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy thông tin người dùng hiện tại"));
+        User user = handleGetUserByUserName(username);
+        if (user == null) {
+            throw new EntityNotFoundException("Không tìm thấy người dùng với username: " + username);
+        }
+        return user;
     }
 
     public ResCreateUserDTO convertToResCreateUserDTO(User user) {

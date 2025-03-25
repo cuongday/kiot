@@ -14,4 +14,6 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
     List<Order> findByUser(User user);
     List<Order> findByPaymentMethod(PaymentMethod paymentMethod);
+
+    
 } 

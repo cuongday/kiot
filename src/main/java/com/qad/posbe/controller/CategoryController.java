@@ -30,14 +30,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 public class CategoryController {
     private final CategoryService categoryService;
     private final CategoryMapper categoryMapper;
 
     @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @GetMapping("/categories")
+    @GetMapping("")
     @ApiMessage("Lấy tất cả danh mục")
     public ResponseEntity<ResultPaginationDTO> getCategories(
         @Filter Specification<Category> categorySpec,
@@ -48,7 +48,7 @@ public class CategoryController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @PostMapping(value = "/categories", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Tạo danh mục mới")
     public ResponseEntity<Category> createCategory(
         @Valid @ModelAttribute CreateCategoryDTO categoryDTO,
@@ -66,7 +66,7 @@ public class CategoryController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @PutMapping(value = "/categories/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ApiMessage("Cập nhật danh mục theo id")
     public ResponseEntity<Category> updateCategory(
         @PathVariable("id") Long id,
@@ -83,9 +83,11 @@ public class CategoryController {
     }
 
     @PreAuthorize("hasRole('admin')")
-    @DeleteMapping("/categories/{id}")
+    @DeleteMapping("/{id}")
     @ApiMessage("Xóa danh mục theo id")
-    public ResponseEntity<Void> deleteCategory(@PathVariable("id") Long id) throws IdInvalidException {
+    public ResponseEntity<Void> deleteCategory(
+        @PathVariable("id") Long id
+    ) throws IdInvalidException {
         Category currentCategory = this.categoryService.fetchCategoryById(id);
         if(currentCategory == null) {
             throw new IdInvalidException("Danh mục với id = " + id + " không tồn tại");
@@ -95,9 +97,11 @@ public class CategoryController {
     }
 
     @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @GetMapping("/categories/{id}")
+    @GetMapping("/{id}")
     @ApiMessage("Lấy danh mục theo id")
-    public ResponseEntity<Category> getCategoryById(@PathVariable("id") Long id) throws IdInvalidException {
+    public ResponseEntity<Category> getCategoryById(
+        @PathVariable("id") Long id
+    ) throws IdInvalidException {
         Category category = this.categoryService.fetchCategoryById(id);
         if(category == null) {
             throw new IdInvalidException("Danh mục với id = " + id + " không tồn tại");

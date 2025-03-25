@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qad.posbe.util.SecurityUtil;
 import com.qad.posbe.util.constant.PaymentMethod;
+import com.qad.posbe.util.constant.PaymentStatus;
 
 import java.time.Instant;
 import java.util.List;
@@ -30,6 +31,14 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     PaymentMethod paymentMethod;
+    
+    @Enumerated(EnumType.STRING)
+    PaymentStatus paymentStatus;
+    
+    @Column(columnDefinition = "MEDIUMTEXT")
+    String paymentUrl;
+    String transactionNo;
+    String paymentMessage;
 
     Instant createdAt;
     Instant updatedAt;
@@ -54,6 +63,9 @@ public class Order {
         this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent() == true
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
+        if (this.paymentStatus == null) {
+            this.paymentStatus = PaymentStatus.PENDING;
+        }
     }
 
     @PreUpdate
