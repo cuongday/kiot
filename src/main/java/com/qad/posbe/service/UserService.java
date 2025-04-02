@@ -128,6 +128,8 @@ public class UserService {
         resCreateUserDTO.setCreatedAt(user.getCreatedAt());
         resCreateUserDTO.setGender(user.getGender());
         resCreateUserDTO.setAddress(user.getAddress());
+        resCreateUserDTO.setAvatar(user.getAvatar());
+        resCreateUserDTO.setRoleId(user.getRole().getId());
 
         return resCreateUserDTO;
     }
@@ -161,6 +163,8 @@ public class UserService {
             roleUser.setName(user.getRole().getName());
             resUserDTO.setRole(roleUser);
         }
+
+        resUserDTO.setAvatar(user.getAvatar());
 
 
         return resUserDTO;

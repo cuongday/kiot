@@ -20,10 +20,10 @@ public class ResUserDTO {
     String name;
     GenderEnum gender;
     String address;
-    int age;
-    Instant updatedAt;
+    Instant updatedAt;  
     Instant createdAt;
     RoleUser role;
+    String avatar;
 
     @Getter
     @Setter
