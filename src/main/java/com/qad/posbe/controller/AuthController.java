@@ -54,6 +54,7 @@ public class AuthController {
                     currentUserDB.getId(),
                     currentUserDB.getUsername(),
                     currentUserDB.getName(),
+                    currentUserDB.getAvatar(),
                     currentUserDB.getRole()
             );
             res.setUser(userLogin);
@@ -69,11 +70,11 @@ public class AuthController {
         this.userService.updateUserToken(refresh_token, loginDTO.getUsername());
 
         //set cookies
-        // ResponseCookie resCookies = ResponseCookie.from("refresh_token", refresh_token)
-        //         .httpOnly(true)
-        //         .maxAge(refreshTokenExpiration)
-        //         .path("/")
-        //         .build();
+         ResponseCookie resCookies = ResponseCookie.from("refresh_token", refresh_token)
+                 .httpOnly(true)
+                 .maxAge(refreshTokenExpiration)
+                 .path("/")
+                 .build();
 
         res.setRefreshToken(refresh_token);
 
@@ -96,6 +97,7 @@ public class AuthController {
             userLogin.setId(currentUserDB.getId());
             userLogin.setUsername(currentUserDB.getUsername());
             userLogin.setName(currentUserDB.getName());
+            userLogin.setAvatar(currentUserDB.getAvatar());
             userGetAccount.setUser(userLogin);
         }
         return ResponseEntity.ok(userGetAccount);
@@ -129,6 +131,7 @@ public class AuthController {
                     currentUserDB.getId(),
                     currentUserDB.getUsername(),
                     currentUserDB.getName(),
+                    currentUserDB.getAvatar(),
                     currentUserDB.getRole()
             );
             res.setUser(userLogin);

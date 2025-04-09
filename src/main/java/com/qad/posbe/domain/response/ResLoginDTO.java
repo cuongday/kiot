@@ -26,6 +26,7 @@ public class ResLoginDTO {
         private Long id;
         private String username;
         private String name;
+        private String avatar;
         private Role role;
     }
 
