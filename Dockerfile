@@ -1,30 +1,22 @@
-FROM eclipse-temurin:17-jdk as build
+FROM gradle:8.7-jdk17 AS build
+COPY --chown=gradle:gradle . /app
 WORKDIR /app
 
-# Copy gradle files
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY settings.gradle .
+# Skip task: test
+RUN gradle clean build -x test --no-daemon
 
-# Make gradlew executable
-RUN chmod +x ./gradlew
-
-# Download dependencies
-RUN ./gradlew dependencies --no-daemon
-
-# Copy source code
-COPY src src
-
-# Build the application
-RUN ./gradlew build -x test --no-daemon
-
-# Runtime stage
+# Stage 2: Run the application
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
+# Tạo thư mục upload
+RUN mkdir -p /app/upload
+
 # Copy the built artifact from the build stage
 COPY --from=build /app/build/libs/*.jar app.jar
+
+# Khai báo volume cho thư mục upload
+VOLUME /app/upload
 
 # Set environment variables
 ENV SPRING_PROFILES_ACTIVE=docker

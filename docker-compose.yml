@@ -1,16 +1,19 @@
-version: '3.8'
+
 
 services:
   app:
     build: .
     ports:
       - "8081:8081"
+    container_name: pos-be
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/kiotdb
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=123456
+      - SPRING_DATASOURCE_USERNAME=kiot
+      - SPRING_DATASOURCE_PASSWORD=kiot123
       - SPRING_PROFILES_ACTIVE=docker
     volumes:
       - ./upload:/app/upload
@@ -18,9 +21,10 @@ services:
       - kiot-network
 
   db:
-    image: mysql:8.0
-    ports:
-      - "3307:3306"
+    container_name: pos-db
+    image: mysql:lts
+    # ports:
+    #   - "3307:3306"
     environment:
       - MYSQL_DATABASE=kiotdb
       - MYSQL_ROOT_PASSWORD=123456
@@ -28,7 +32,7 @@ services:
       - MYSQL_PASSWORD=kiot123
     volumes:
       - mysql-data:/var/lib/mysql
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     networks:
       - kiot-network
     healthcheck:
