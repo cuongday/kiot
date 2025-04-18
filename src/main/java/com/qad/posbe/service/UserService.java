@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,17 +13,21 @@ import com.qad.posbe.domain.Role;
 import com.qad.posbe.domain.User;
 import com.qad.posbe.domain.request.CreateUserDTO;
 import com.qad.posbe.domain.request.UpdateUserDTO;
+import com.qad.posbe.domain.request.ChangePasswordDTO;
 import com.qad.posbe.domain.response.ResCreateUserDTO;
 import com.qad.posbe.domain.response.ResUpdateUserDTO;
 import com.qad.posbe.domain.response.ResUserDTO;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
 import com.qad.posbe.repository.UserRepository;
 import com.qad.posbe.util.SecurityUtil;
+import com.qad.posbe.util.error.InvalidPasswordException;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +35,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleService roleService;
     private final CloudinaryService cloudinaryService;
+    private final PasswordEncoder passwordEncoder;
 
 
     public User handleCreateUser(User user, MultipartFile avatarFile) {
@@ -192,5 +199,28 @@ public class UserService {
 
     public User getUserByRefreshTokenAndEmail(String token, String username){
         return this.userRepository.findByRefreshTokenAndUsername(token, username);
+    }
+
+    @Transactional
+    public void changePassword(String username, ChangePasswordDTO changePasswordDTO) {
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu có khớp nhau
+        if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
+            throw new InvalidPasswordException("Mật khẩu mới và xác nhận mật khẩu không khớp");
+        }
+
+        // Lấy thông tin user
+        User user = this.userRepository.findByUsername(username);
+        if(user == null){
+            throw new EntityNotFoundException("Không tìm thấy người dùng");
+        }
+
+        // Kiểm tra mật khẩu cũ có đúng không
+        if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("Mật khẩu cũ không đúng");
+        }
+
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        userRepository.save(user);
     }
 }

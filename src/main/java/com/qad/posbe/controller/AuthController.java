@@ -22,6 +22,10 @@ import com.qad.posbe.service.UserService;
 import com.qad.posbe.util.SecurityUtil;
 import com.qad.posbe.util.annotation.ApiMessage;
 import com.qad.posbe.util.error.IdInvalidException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import com.qad.posbe.domain.request.ChangePasswordDTO;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,18 +42,24 @@ public class AuthController {
 
     @PostMapping("/auth/login")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO loginDTO) {
-        //Nạp input gồm username/password vào Security
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                loginDTO.getUsername(), loginDTO.getPassword());
-        //xác thực người dùng => cần viết hàm loadUserByUsername
-        Authentication authentication =
-                authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        // create a token
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        ResLoginDTO res = new ResLoginDTO();
+        try {
+            //Nạp input gồm username/password vào Security
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                    loginDTO.getUsername(), loginDTO.getPassword());
+            
+            //xác thực người dùng
+            Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            
+            // Kiểm tra user có tồn tại trong DB
+            User currentUserDB = this.userService.handleGetUserByUserName(loginDTO.getUsername());
+            if(currentUserDB == null) {
+                throw new UsernameNotFoundException("Tài khoản không tồn tại trong hệ thống");
+            }
 
-        User currentUserDB = this.userService.handleGetUserByUserName(loginDTO.getUsername());
-        if(currentUserDB != null){
+            // create token và set authentication
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            ResLoginDTO res = new ResLoginDTO();
+
             ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
                     currentUserDB.getId(),
                     currentUserDB.getUsername(),
@@ -58,30 +68,35 @@ public class AuthController {
                     currentUserDB.getRole()
             );
             res.setUser(userLogin);
+
+            String access_token = this.securityUtil.createAccessToken(authentication.getName(), res);
+            res.setAccessToken(access_token);
+
+            // create a refresh token
+            String refresh_token = this.securityUtil.createRefreshToken(loginDTO.getUsername(), res);
+            //update user
+            this.userService.updateUserToken(refresh_token, loginDTO.getUsername());
+
+            //set cookies
+            ResponseCookie resCookies = ResponseCookie.from("refresh_token", refresh_token)
+                    .httpOnly(true)
+                    .maxAge(refreshTokenExpiration)
+                    .path("/")
+                    .build();
+
+            res.setRefreshToken(refresh_token);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, resCookies.toString())
+                    .body(res);
+
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Tên đăng nhập hoặc mật khẩu không chính xác");
+        } catch (UsernameNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Có lỗi xảy ra trong quá trình đăng nhập: " + e.getMessage());
         }
-        String access_token = this.securityUtil.createAccessToken(authentication.getName(), res);
-
-
-        res.setAccessToken(access_token);
-
-        // create a refresh token
-        String refresh_token = this.securityUtil.createRefreshToken(loginDTO.getUsername(), res);
-        //update user
-        this.userService.updateUserToken(refresh_token, loginDTO.getUsername());
-
-        //set cookies
-         ResponseCookie resCookies = ResponseCookie.from("refresh_token", refresh_token)
-                 .httpOnly(true)
-                 .maxAge(refreshTokenExpiration)
-                 .path("/")
-                 .build();
-
-        res.setRefreshToken(refresh_token);
-
-        return ResponseEntity.ok()
-                .body(res);
-
-
     }
 
 
@@ -196,5 +211,16 @@ public class AuthController {
         postmanUser.setPassword(hashPassword);
         User newUser = this.userService.handleCreateUser(postmanUser, null);
         return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.convertToResCreateUserDTO(newUser));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/change-password")
+    @ApiMessage("Đổi mật khẩu thành công")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
+        String username = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin người dùng hiện tại"));
+        
+        userService.changePassword(username, changePasswordDTO);
+        return ResponseEntity.ok().build();
     }
 }

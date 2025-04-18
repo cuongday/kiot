@@ -1,5 +1,3 @@
-
-
 services:
   app:
     build: .
@@ -23,8 +21,8 @@ services:
   db:
     container_name: pos-db
     image: mysql:lts
-    # ports:
-    #   - "3307:3306"
+    ports:
+      - "3307:3306"
     environment:
       - MYSQL_DATABASE=kiotdb
       - MYSQL_ROOT_PASSWORD=123456
