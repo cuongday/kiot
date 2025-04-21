@@ -8,12 +8,12 @@ import com.qad.posbe.domain.Order;
 import com.qad.posbe.domain.User;
 import com.qad.posbe.util.constant.PaymentMethod;
 
+import java.time.Instant;
 import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
     List<Order> findByUser(User user);
     List<Order> findByPaymentMethod(PaymentMethod paymentMethod);
-
-    
+    List<Order> findByCreatedAtBetween(Instant startTime, Instant endTime);
 } 
