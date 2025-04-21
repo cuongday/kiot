@@ -41,6 +41,11 @@ dependencies {
     implementation ("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
     implementation ("org.mapstruct:mapstruct:1.5.5.Final")
     implementation ("com.turkraft.springfilter:jpa:3.1.7")
+    
+    // Apache POI - Xử lý file Excel
+    implementation ("org.apache.poi:poi:5.2.3")
+    implementation ("org.apache.poi:poi-ooxml:5.2.3")
+    implementation ("commons-io:commons-io:2.15.1")
 
     compileOnly ("org.projectlombok:lombok")
     developmentOnly ("org.springframework.boot:spring-boot-devtools")

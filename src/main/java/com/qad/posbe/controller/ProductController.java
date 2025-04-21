@@ -6,15 +6,18 @@ import com.qad.posbe.domain.request.CreateProductDTO;
 import com.qad.posbe.domain.request.UpdateProductDTO;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
 import com.qad.posbe.service.ProductService;
+import com.qad.posbe.service.ExcelExportService;
 import com.qad.posbe.util.annotation.ApiMessage;
 import com.qad.posbe.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +25,20 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
+
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
+@Slf4j
 public class ProductController {
     private final ProductService productService;
     private final ProductMapper productMapper;
+    private final ExcelExportService excelExportService;
 
     @PreAuthorize("hasAnyRole('admin', 'employee')")
     @GetMapping("")
@@ -127,5 +136,27 @@ public class ProductController {
     @ApiMessage("Lấy sản phẩm theo nhà cung cấp")
     public ResponseEntity<List<Product>> getProductsBySupplier(@PathVariable("supplierId") Long supplierId) throws IdInvalidException {
         return ResponseEntity.ok(productService.getBySupplier(supplierId));
+    }
+
+    // Thêm endpoint mới để xuất danh sách sản phẩm ra Excel
+    @GetMapping("/export-excel")
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
+    @ApiMessage("Xuất danh sách sản phẩm ra file Excel")
+    public ResponseEntity<Resource> exportProductsToExcel() {
+        try {
+            ByteArrayInputStream excelData = excelExportService.exportProductsToExcel();
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=products.xlsx");
+            
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                    .body(new InputStreamResource(excelData));
+        } catch (Exception e) {
+            log.error("Lỗi khi xuất file Excel: ", e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 } 

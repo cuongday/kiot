@@ -60,7 +60,7 @@ public class OrderController {
                                ", SellPrice=" + item.getSellPrice());
         }
         
-        Order order = orderService.createOrder(createOrderDTO);
+        Order order = this.orderService.createOrder(createOrderDTO);
         
         // Log total price of created order
         System.out.println("Created order with ID: " + order.getId() + ", Total Price: " + order.getTotalPrice());
