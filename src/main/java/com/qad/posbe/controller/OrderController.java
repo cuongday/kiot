@@ -21,11 +21,9 @@ import com.qad.posbe.domain.Order;
 import com.qad.posbe.domain.OrderDetail;
 import com.qad.posbe.domain.User;
 import com.qad.posbe.domain.request.CreateOrderDTO;
-import com.qad.posbe.domain.response.OrderResponse;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
 import com.qad.posbe.service.OrderService;
 import com.qad.posbe.service.UserService;
-import com.qad.posbe.service.VNPayService;
 import com.qad.posbe.util.SecurityUtil;
 import com.qad.posbe.util.annotation.ApiMessage;
 import com.qad.posbe.util.constant.PaymentMethod;
@@ -41,12 +39,11 @@ import lombok.RequiredArgsConstructor;
 public class OrderController {
     private final OrderService orderService;
     private final UserService userService;
-    private final VNPayService vnPayService;
     
     @PreAuthorize("hasAnyRole('admin', 'employee')")
     @PostMapping
     @ApiMessage("Tạo đơn hàng mới thành công")
-    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderDTO createOrderDTO) {
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody CreateOrderDTO createOrderDTO) {
         // Debug log for incoming DTO
         System.out.println("Received order request: " + createOrderDTO);
         System.out.println("Payment method: " + createOrderDTO.getPaymentMethod());
@@ -62,28 +59,7 @@ public class OrderController {
         
         Order order = this.orderService.createOrder(createOrderDTO);
         
-        // Log total price of created order
-        System.out.println("Created order with ID: " + order.getId() + ", Total Price: " + order.getTotalPrice());
-   
-        OrderResponse response = OrderResponse.builder()
-            .order(order)
-            .build();
-
-        // For TRANSFER payment method, generate a VNPAY payment URL
-        if (order.getPaymentMethod() == PaymentMethod.TRANSFER) {
-            String orderInfo = "Thanh toan don hang: " + order.getId();
-            String paymentUrl = vnPayService.createPaymentUrl(
-                order.getId(), 
-                order.getTotalPrice(), 
-                orderInfo
-            );
-            
-            order.setPaymentUrl(paymentUrl);
-            orderService.updateOrder(order);
-            response.setPaymentUrl(paymentUrl);
-        }
-        
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
     
     @PreAuthorize("hasAnyRole('admin', 'employee')")
@@ -127,39 +103,6 @@ public class OrderController {
         return ResponseEntity.ok(orderDetails);
     }
     
-    @GetMapping("/{id}/payment-url")
-    @PreAuthorize("hasAnyRole('admin', 'employee')")
-    @ApiMessage("Lấy URL thanh toán cho đơn hàng thành công")
-    public ResponseEntity<?> getPaymentUrl(@PathVariable("id") Long id) {
-        Order order = orderService.getOrderById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + id));
-        
-        // Only generate payment URL for TRANSFER payment method
-        if (order.getPaymentMethod() != PaymentMethod.TRANSFER) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "Đơn hàng không sử dụng phương thức thanh toán TRANSFER");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-        
-        // If payment URL already exists, return it
-        if (order.getPaymentUrl() != null && !order.getPaymentUrl().isEmpty()) {
-            Map<String, String> response = new HashMap<>();
-            response.put("paymentUrl", order.getPaymentUrl());
-            return ResponseEntity.ok(response);
-        }
-        
-        // Generate new payment URL
-        String orderInfo = "Thanh toan don hang: " + order.getId();
-        String paymentUrl = vnPayService.createPaymentUrl(order.getId(), order.getTotalPrice(), orderInfo);
-        
-        // Update order with payment URL
-        order.setPaymentUrl(paymentUrl);
-        orderService.updateOrder(order);
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("paymentUrl", paymentUrl);
-        return ResponseEntity.ok(response);
-    }
     
     @PostMapping("/{id}/update-payment-status")
     @PreAuthorize("hasAnyRole('admin', 'employee')")

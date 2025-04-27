@@ -25,6 +25,7 @@ import com.qad.posbe.repository.OrderRepository;
 import com.qad.posbe.repository.ProductRepository;
 import com.qad.posbe.repository.UserRepository;
 import com.qad.posbe.util.SecurityUtil;
+import com.qad.posbe.util.constant.PaymentStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,7 +43,7 @@ public class OrderService {
         // Get current user
         String currentUsername = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại"));
-        User currentUser = userRepository.findByUsername(currentUsername);
+        User currentUser = this.userRepository.findByUsername(currentUsername);
         if (currentUser == null) {
             throw new RuntimeException("Không tìm thấy người dùng hiện tại");
         }
@@ -50,7 +51,7 @@ public class OrderService {
         // Get customer if provided
         Customer customer = null;
         if (createOrderDTO.getCustomerId() != null) {
-            customer = customerRepository.findById(createOrderDTO.getCustomerId())
+            customer = this.customerRepository.findById(createOrderDTO.getCustomerId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
         }
         
@@ -59,7 +60,7 @@ public class OrderService {
                 .map(OrderItemDTO::getProductId)
                 .toList();
                 
-        List<Product> products = productRepository.findAllById(productIds);
+        List<Product> products = this.productRepository.findAllById(productIds);
         
         // Create a map for quick access to products
         var productMap = products.stream()
@@ -90,6 +91,7 @@ public class OrderService {
         // Create and save order
         Order order = Order.builder()
                 .paymentMethod(createOrderDTO.getPaymentMethod())
+                .paymentStatus(PaymentStatus.PAID)
                 .totalPrice(totalPrice)
                 .user(currentUser)
                 .customer(customer)
@@ -97,7 +99,7 @@ public class OrderService {
                 .createdBy(currentUsername)
                 .build();
         
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder = this.orderRepository.save(order);
         
         // Create and save order details
         List<OrderDetail> orderDetails = new ArrayList<>();

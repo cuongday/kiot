@@ -18,6 +18,8 @@ public class ResCreateUserDTO {
     Long id;
     String name;
     String username;
+    String phoneNumber;
+    String email;
     GenderEnum gender;
     String address;
     Instant createdAt;

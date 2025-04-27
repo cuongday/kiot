@@ -93,6 +93,8 @@ public class UserService {
             currentUser.setAddress(reqUser.getAddress());
             currentUser.setGender(reqUser.getGender());
             currentUser.setName(reqUser.getName());
+            currentUser.setPhoneNumber(reqUser.getPhoneNumber());
+            currentUser.setEmail(reqUser.getEmail());
 
             if(avatarFile != null && !avatarFile.isEmpty()){
                 String avatarUrl = this.cloudinaryService.uploadImage(avatarFile);
@@ -132,6 +134,8 @@ public class UserService {
         resCreateUserDTO.setId(user.getId());
         resCreateUserDTO.setUsername(user.getUsername());
         resCreateUserDTO.setName(user.getName());
+        resCreateUserDTO.setPhoneNumber(user.getPhoneNumber());
+        resCreateUserDTO.setEmail(user.getEmail());
         resCreateUserDTO.setCreatedAt(user.getCreatedAt());
         resCreateUserDTO.setGender(user.getGender());
         resCreateUserDTO.setAddress(user.getAddress());
@@ -146,6 +150,8 @@ public class UserService {
 
         resUpdateUserDTO.setId(user.getId());
         resUpdateUserDTO.setName(user.getName());
+        resUpdateUserDTO.setPhoneNumber(user.getPhoneNumber());
+        resUpdateUserDTO.setEmail(user.getEmail());
         resUpdateUserDTO.setUpdatedAt(user.getUpdatedAt());
         resUpdateUserDTO.setGender(user.getGender());
         resUpdateUserDTO.setAddress(user.getAddress());
@@ -160,6 +166,8 @@ public class UserService {
         resUserDTO.setId(user.getId());
         resUserDTO.setUsername(user.getUsername());
         resUserDTO.setName(user.getName());
+        resUserDTO.setPhoneNumber(user.getPhoneNumber());
+        resUserDTO.setEmail(user.getEmail());
         resUserDTO.setUpdatedAt(user.getUpdatedAt());
         resUserDTO.setCreatedAt(user.getCreatedAt());
         resUserDTO.setGender(user.getGender());
@@ -183,6 +191,8 @@ public class UserService {
                 .name(formRequest.getName())
                 .username(formRequest.getUsername())
                 .password(formRequest.getPassword())
+                .phoneNumber(formRequest.getPhoneNumber())
+                .email(formRequest.getEmail())
                 .gender(formRequest.getGender())
                 .address(formRequest.getAddress())
                 .role(formRequest.getRoleId() != null ? Role.builder().id(formRequest.getRoleId()).build() : null)

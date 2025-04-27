@@ -4,6 +4,8 @@ package com.qad.posbe.domain;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -38,6 +40,13 @@ public class User  {
     @NotNull
     @Size(min = 3, message = "Password phải có ít nhất 3 ký tự")
     String password;
+    
+    @Pattern(regexp = "^0\\d{9}$", message = "Số điện thoại phải bắt đầu bằng số 0 và có 10 chữ số")
+    String phoneNumber;
+    
+    @Email(message = "Email không hợp lệ")
+    String email;
+    
     @Enumerated(EnumType.STRING)
     GenderEnum gender;
     String address;

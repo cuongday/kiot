@@ -18,6 +18,8 @@ public class ResUserDTO {
     Long id;
     String username;
     String name;
+    String phoneNumber;
+    String email;
     GenderEnum gender;
     String address;
     Instant updatedAt;  

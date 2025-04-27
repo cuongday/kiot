@@ -17,6 +17,8 @@ import java.time.Instant;
 public class ResUpdateUserDTO {
     Long id;
     String name;
+    String phoneNumber;
+    String email;
     GenderEnum gender;
     String address;
     int age;

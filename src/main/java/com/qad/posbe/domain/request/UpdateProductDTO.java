@@ -28,8 +28,6 @@ public class UpdateProductDTO {
     
     @Min(value = 0, message = "Giá bán sản phẩm phải lớn hơn hoặc bằng 0")
     private Long sellPrice;
-
-    private Instant date;
     private String status;
     
     @NotNull(message = "Nhà cung cấp không được để trống")

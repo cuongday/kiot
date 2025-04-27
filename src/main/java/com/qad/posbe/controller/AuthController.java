@@ -64,6 +64,8 @@ public class AuthController {
                     currentUserDB.getId(),
                     currentUserDB.getUsername(),
                     currentUserDB.getName(),
+                    currentUserDB.getPhoneNumber(),
+                    currentUserDB.getEmail(),
                     currentUserDB.getAvatar(),
                     currentUserDB.getRole()
             );
@@ -113,6 +115,8 @@ public class AuthController {
             userLogin.setUsername(currentUserDB.getUsername());
             userLogin.setName(currentUserDB.getName());
             userLogin.setAvatar(currentUserDB.getAvatar());
+            userLogin.setPhoneNumber(currentUserDB.getPhoneNumber());
+            userLogin.setEmail(currentUserDB.getEmail());
             userGetAccount.setUser(userLogin);
         }
         return ResponseEntity.ok(userGetAccount);
@@ -145,6 +149,8 @@ public class AuthController {
             ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
                     currentUserDB.getId(),
                     currentUserDB.getUsername(),
+                    currentUserDB.getPhoneNumber(),
+                    currentUserDB.getEmail(),
                     currentUserDB.getName(),
                     currentUserDB.getAvatar(),
                     currentUserDB.getRole()
