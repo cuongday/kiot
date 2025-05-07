@@ -47,6 +47,13 @@ dependencies {
     implementation ("org.apache.poi:poi-ooxml:5.2.3")
     implementation ("commons-io:commons-io:2.15.1")
 
+    // iText 7 - Xử lý file PDF
+    implementation ("com.itextpdf:itext7-core:7.2.5")
+    implementation ("com.itextpdf:io:7.2.5")
+    implementation ("com.itextpdf:kernel:7.2.5")
+    implementation ("com.itextpdf:layout:7.2.5")
+    implementation ("com.itextpdf:font-asian:7.2.5")
+
     compileOnly ("org.projectlombok:lombok")
     developmentOnly ("org.springframework.boot:spring-boot-devtools")
     runtimeOnly ("com.mysql:mysql-connector-j")

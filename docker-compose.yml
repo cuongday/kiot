@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8081:8081"
+    - "8081:8081"
     container_name: pos-be
     depends_on:
       db:

@@ -6,7 +6,9 @@ import java.util.HashMap;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +25,7 @@ import com.qad.posbe.domain.User;
 import com.qad.posbe.domain.request.CreateOrderDTO;
 import com.qad.posbe.domain.response.ResultPaginationDTO;
 import com.qad.posbe.service.OrderService;
+import com.qad.posbe.service.PdfExportService;
 import com.qad.posbe.service.UserService;
 import com.qad.posbe.util.SecurityUtil;
 import com.qad.posbe.util.annotation.ApiMessage;
@@ -39,6 +42,7 @@ import lombok.RequiredArgsConstructor;
 public class OrderController {
     private final OrderService orderService;
     private final UserService userService;
+    private final PdfExportService pdfExportService;
     
     @PreAuthorize("hasAnyRole('admin', 'employee')")
     @PostMapping
@@ -132,5 +136,29 @@ public class OrderController {
         Order updatedOrder = orderService.updateOrder(order);
         
         return ResponseEntity.ok(updatedOrder);
+    }
+    
+    @GetMapping("/{id}/invoice")
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
+    @ApiMessage("Xuất hóa đơn PDF thành công")
+    public ResponseEntity<byte[]> generateInvoice(@PathVariable("id") Long id) {
+        try {
+            // Kiểm tra đơn hàng tồn tại
+            orderService.getOrderById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + id));
+            
+            // Tạo hóa đơn PDF
+            byte[] pdfContent = pdfExportService.generateInvoicePdf(id);
+            
+            // Thiết lập headers cho response
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("filename", "hoadon-" + id + ".pdf");
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+            
+            return new ResponseEntity<>(pdfContent, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 } 
