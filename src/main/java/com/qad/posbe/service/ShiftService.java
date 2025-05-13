@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -228,11 +229,21 @@ public class ShiftService {
      * @return Danh sách ca làm việc
      */
     public ResultPaginationDTO getAllShifts(Specification<Shift> spec, Pageable pageable) {
-        Page<Shift> shiftPage = shiftRepository.findAll(spec, pageable);
+        // Xử lý lại pageNumber
+        int pageNumber = pageable.getPageNumber();
+        if (pageNumber > 0) {
+            pageNumber = pageNumber - 1;
+        }
+        
+        // Tạo lại pageable với pageNumber mới
+        Pageable adjustedPageable = PageRequest.of(pageNumber, pageable.getPageSize(), pageable.getSort());
+        
+        // Lấy danh sách ca làm việc với pageable đã điều chỉnh
+        Page<Shift> shiftPage = shiftRepository.findAll(spec, adjustedPageable);
         
         ResultPaginationDTO result = new ResultPaginationDTO();
         ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
-        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setPage(pageNumber + 1); // Trả về số trang theo format của client
         meta.setPageSize(pageable.getPageSize());
         meta.setPages(shiftPage.getTotalPages());
         meta.setTotal(shiftPage.getTotalElements());
@@ -340,5 +351,58 @@ public class ShiftService {
                 .createdAt(shift.getCreatedAt())
                 .updatedAt(shift.getUpdatedAt())
                 .build();
+    }
+    
+    /**
+     * Lấy danh sách đơn hàng trong ca làm việc có phân trang
+     * @param shiftId ID ca làm việc
+     * @param spec Điều kiện lọc
+     * @param pageable Thông tin phân trang
+     * @return Danh sách đơn hàng
+     */
+    public ResultPaginationDTO getOrdersInShift(Long shiftId, Specification<Order> spec, Pageable pageable) {
+        // Lấy thông tin ca làm việc
+        Shift shift = shiftRepository.findById(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy ca làm việc với ID: " + shiftId));
+        
+        // Lấy thời gian bắt đầu và kết thúc ca
+        Instant startTime = shift.getStartTime();
+        Instant endTime = (shift.getEndTime() != null) ? shift.getEndTime() : Instant.now();
+        
+        // Tạo specification để lọc đơn hàng theo thời gian và người dùng
+        Specification<Order> timeSpec = (root, query, cb) -> {
+            return cb.and(
+                cb.greaterThanOrEqualTo(root.get("createdAt"), startTime),
+                cb.lessThanOrEqualTo(root.get("createdAt"), endTime),
+                cb.equal(root.get("user"), shift.getUser())
+            );
+        };
+        
+        // Kết hợp với specification từ request
+        Specification<Order> finalSpec = spec != null ? timeSpec.and(spec) : timeSpec;
+        
+        // Xử lý lại pageNumber
+        int pageNumber = pageable.getPageNumber();
+        if (pageNumber > 0) {
+            pageNumber = pageNumber - 1;
+        }
+        
+        // Tạo lại pageable với pageNumber mới
+        Pageable adjustedPageable = PageRequest.of(pageNumber, pageable.getPageSize(), pageable.getSort());
+        
+        // Lấy danh sách đơn hàng
+        Page<Order> orderPage = orderRepository.findAll(finalSpec, adjustedPageable);
+        
+        ResultPaginationDTO result = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
+        meta.setPage(pageNumber + 1); // Trả về số trang theo format của client
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(orderPage.getTotalPages());
+        meta.setTotal(orderPage.getTotalElements());
+        
+        result.setMeta(meta);
+        result.setResult(orderPage.getContent());
+        
+        return result;
     }
 } 
