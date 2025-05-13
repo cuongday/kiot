@@ -55,7 +55,7 @@ public class PdfExportService {
     private final ServletContext servletContext;
     
     // Font cache để tối ưu hiệu suất
-    private Map<String, PdfFont> fontCache = new HashMap<>();
+    private Map<String, byte[]> fontDataCache = new HashMap<>();
     
     @PostConstruct
     public void init() {
@@ -65,11 +65,9 @@ public class PdfExportService {
             // Tải font Times New Roman từ classpath
             loadFontFromClassPath();
             
-            log.info("Khởi tạo font thành công: {}", fontCache.keySet());
+            log.info("Khởi tạo font thành công");
         } catch (Exception e) {
             log.error("Lỗi khi khởi tạo font: {}", e.getMessage(), e);
-            // Thử sử dụng font mặc định
-            registerDefaultFonts();
         }
     }
     
@@ -82,64 +80,35 @@ public class PdfExportService {
                 log.info("Đã tìm thấy font Times New Roman trong classpath");
                 
                 try (InputStream is = resource.getInputStream()) {
-                    // Đọc font từ stream
+                    // Đọc font từ stream và lưu dữ liệu byte vào cache
                     byte[] fontData = is.readAllBytes();
-                    
-                    // Tạo font từ dữ liệu byte
-                    FontProgram fontProgram = FontProgramFactory.createFont(fontData);
-                    
-                    // Tạo font với encoding IDENTITY_H để hỗ trợ tiếng Việt
-                    PdfFont normalFont = PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
-                    fontCache.put("normal", normalFont);
-                    
-                    // Sử dụng font đầm đặc hơn cho dữ liệu in đậm
-                    PdfFont boldFont = PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
-                    fontCache.put("bold", boldFont);
+                    fontDataCache.put("times", fontData);
                     
                     log.info("Đã tải font Times New Roman thành công");
                 }
             } else {
-                log.warn("Không tìm thấy font trong classpath, đang sử dụng font dự phòng");
-                registerDefaultFonts();
+                log.warn("Không tìm thấy font trong classpath");
             }
         } catch (Exception e) {
             log.error("Lỗi khi tải font từ classpath: {}", e.getMessage(), e);
-            registerDefaultFonts();
         }
     }
     
-    private void registerDefaultFonts() {
+    // Lấy font mới cho mỗi lần tạo PDF
+    private PdfFont createFont(boolean bold) {
         try {
-            log.info("Đang đăng ký font mặc định...");
+            // Sử dụng dữ liệu font từ cache nếu có
+            if (fontDataCache.containsKey("times")) {
+                byte[] fontData = fontDataCache.get("times");
+                FontProgram fontProgram = FontProgramFactory.createFont(fontData);
+                return PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+            }
             
-            // Sử dụng font Helvetica với encoding CP1252 hỗ trợ tiếng Việt
-            PdfFont normalFont = PdfFontFactory.createFont("Helvetica", PdfEncodings.CP1252, EmbeddingStrategy.PREFER_EMBEDDED);
-            fontCache.put("normal", normalFont);
-            
-            PdfFont boldFont = PdfFontFactory.createFont("Helvetica-Bold", PdfEncodings.CP1252, EmbeddingStrategy.PREFER_EMBEDDED);
-            fontCache.put("bold", boldFont);
-            
-            log.info("Đã đăng ký font mặc định thành công");
+            // Nếu không có font trong cache, sử dụng font mặc định
+            String fontName = bold ? "Helvetica-Bold" : "Helvetica";
+            return PdfFontFactory.createFont(fontName, PdfEncodings.CP1252, EmbeddingStrategy.PREFER_EMBEDDED);
         } catch (IOException e) {
-            log.error("Lỗi khi đăng ký font mặc định: {}", e.getMessage(), e);
-        }
-    }
-    
-    // Lấy font từ cache
-    private PdfFont getFont(boolean bold) {
-        String key = bold ? "bold" : "normal";
-        
-        if (fontCache.containsKey(key)) {
-            return fontCache.get(key);
-        }
-        
-        try {
-            log.warn("Font {} không có trong cache, đang tạo font mặc định", key);
-            PdfFont font = PdfFontFactory.createFont("Helvetica", PdfEncodings.CP1252, EmbeddingStrategy.PREFER_EMBEDDED);
-            fontCache.put(key, font);
-            return font;
-        } catch (IOException e) {
-            log.error("Lỗi khi tạo font {}: {}", key, e.getMessage());
+            log.error("Lỗi khi tạo font: {}", e.getMessage());
             throw new RuntimeException("Không thể tạo font: " + e.getMessage());
         }
     }
@@ -169,9 +138,9 @@ public class PdfExportService {
             // Sử dụng khổ giấy A5
             Document document = new Document(pdfDoc, PageSize.A5);
             
-            // Lấy các font từ cache
-            PdfFont normalFont = getFont(false);
-            PdfFont boldFont = getFont(true);
+            // Tạo font mới cho mỗi tài liệu PDF
+            PdfFont normalFont = createFont(false);
+            PdfFont boldFont = createFont(true);
             
             // Tạo tiêu đề hóa đơn
             Paragraph header = new Paragraph("CỬA HÀNG TẠP HÓA THÁI THỤY")
@@ -379,7 +348,7 @@ public class PdfExportService {
     public boolean checkFontAvailability() {
         try {
             // Tạo một văn bản mẫu để kiểm tra
-            PdfFont font = getFont(false);
+            PdfFont font = createFont(false);
             
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PdfWriter writer = new PdfWriter(baos);
@@ -401,8 +370,8 @@ public class PdfExportService {
     // Lấy thông tin về font đã đăng ký
     public Map<String, Object> getFontInfo() {
         Map<String, Object> info = new HashMap<>();
-        info.put("fontCacheSize", fontCache.size());
-        info.put("registeredFonts", fontCache.keySet());
+        info.put("fontDataCacheSize", fontDataCache.size());
+        info.put("registeredFonts", fontDataCache.keySet());
         
         try {
             // Thêm thông tin về font trong classpath

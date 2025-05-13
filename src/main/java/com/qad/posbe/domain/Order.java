@@ -50,7 +50,6 @@ public class Order {
     User user;
 
     @OneToMany(mappedBy = "order")
-    @JsonIgnore
     private List<OrderDetail> orderDetails;
 
     @ManyToOne

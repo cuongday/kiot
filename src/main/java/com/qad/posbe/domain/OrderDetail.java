@@ -8,6 +8,8 @@ import lombok.experimental.FieldDefaults;
 import com.qad.posbe.util.SecurityUtil;
 
 import java.time.Instant;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 // import java.util.List;
 @Entity
 @Table(name = "order_details")
@@ -37,6 +39,7 @@ public class OrderDetail {
 
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonIgnore
     Order order;
 
     @ManyToOne
