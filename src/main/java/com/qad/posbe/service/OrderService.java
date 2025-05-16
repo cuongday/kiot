@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -145,20 +146,30 @@ public class OrderService {
         return orderRepository.findById(id);
     }
     
-    public ResultPaginationDTO getAllOrders(Specification<Order> orderSpec, Pageable pageable) {
-        Page<Order> orderPage = this.orderRepository.findAll(orderSpec, pageable);
+    public ResultPaginationDTO getAllOrders(Specification<Order> spec, Pageable pageable) {
+        // Xử lý lại pageNumber
+        int pageNumber = pageable.getPageNumber();
+        if (pageNumber > 0) {
+            pageNumber = pageNumber - 1;
+        }
         
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
+        // Tạo lại pageable với pageNumber mới
+        Pageable adjustedPageable = PageRequest.of(pageNumber, pageable.getPageSize(), pageable.getSort());
+        
+        // Lấy danh sách đơn hàng với pageable đã điều chỉnh
+        Page<Order> orderPage = orderRepository.findAll(spec, adjustedPageable);
+        
+        ResultPaginationDTO result = new ResultPaginationDTO();
         ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
-        meta.setPage(orderPage.getNumber() + 1);
-        meta.setPageSize(orderPage.getSize());
+        meta.setPage(pageNumber + 1); // Trả về số trang theo format của client
+        meta.setPageSize(pageable.getPageSize());
         meta.setPages(orderPage.getTotalPages());
         meta.setTotal(orderPage.getTotalElements());
         
-        resultPaginationDTO.setMeta(meta);
-        resultPaginationDTO.setResult(orderPage.getContent());
+        result.setMeta(meta);
+        result.setResult(orderPage.getContent());
         
-        return resultPaginationDTO;
+        return result;
     }
     
     public List<Order> getOrdersByUser(User user) {

@@ -4,11 +4,14 @@ import com.turkraft.springfilter.boot.Filter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.web.PageableDefault;
 
+import com.qad.posbe.domain.Order;
 import com.qad.posbe.domain.Shift;
 import com.qad.posbe.domain.request.CloseShiftDTO;
 import com.qad.posbe.domain.request.OpenShiftDTO;
@@ -107,6 +110,20 @@ public class ShiftController {
     }
     
     /**
+     * Lấy danh sách đơn hàng trong ca làm việc
+     */
+    @GetMapping("/{id}/orders")
+    @PreAuthorize("hasAnyRole('admin', 'employee')")
+    @ApiMessage("Lấy danh sách đơn hàng trong ca làm việc thành công")
+    public ResponseEntity<ResultPaginationDTO> getOrdersInShift(
+            @PathVariable("id") Long id,
+            @Filter Specification<Order> spec,
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        ResultPaginationDTO orders = shiftService.getOrdersInShift(id, spec, pageable);
+        return ResponseEntity.ok(orders);
+    }
+    
+    /**
      * Lấy danh sách ca làm việc có phân trang
      */
     @GetMapping
@@ -114,7 +131,8 @@ public class ShiftController {
     @ApiMessage("Lấy danh sách ca làm việc thành công")
     public ResponseEntity<ResultPaginationDTO> getAllShifts(
             @Filter Specification<Shift> spec,
-            Pageable pageable) {
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        
         ResultPaginationDTO shifts = shiftService.getAllShifts(spec, pageable);
         return ResponseEntity.ok(shifts);
     }

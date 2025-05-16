@@ -8,6 +8,8 @@ import java.io.OutputStream;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -80,7 +82,7 @@ public class OrderController {
     @ApiMessage("Lấy danh sách đơn hàng thành công")
     public ResponseEntity<ResultPaginationDTO> getAllOrders(
             @Filter Specification<Order> orderSpec,
-            Pageable pageable) {
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         
         ResultPaginationDTO result = this.orderService.getAllOrders(orderSpec, pageable);
         return ResponseEntity.ok(result);
