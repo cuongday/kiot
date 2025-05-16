@@ -117,6 +117,7 @@ public class AuthController {
             userLogin.setAvatar(currentUserDB.getAvatar());
             userLogin.setPhoneNumber(currentUserDB.getPhoneNumber());
             userLogin.setEmail(currentUserDB.getEmail());
+            userLogin.setRole(currentUserDB.getRole());
             userGetAccount.setUser(userLogin);
         }
         return ResponseEntity.ok(userGetAccount);
