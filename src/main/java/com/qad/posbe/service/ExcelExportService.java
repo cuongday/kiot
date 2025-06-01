@@ -62,7 +62,7 @@ public class ExcelExportService {
                 row.createCell(4).setCellValue(product.getSellPrice());
                 row.createCell(5).setCellValue(product.getQuantity());
                 row.createCell(6).setCellValue(product.getCategory() != null ? product.getCategory().getName() : "");
-                row.createCell(7).setCellValue(product.getStatus() != null ? product.getStatus() : "");
+                row.createCell(7).setCellValue(product.getStatus() != null ? product.getStatus().toString() : "");
             }
             
             // Auto-size columns

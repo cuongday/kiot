@@ -122,7 +122,17 @@ public class ProductService {
         existingProduct.setDescription(product.getDescription());
         existingProduct.setBuyPrice(product.getBuyPrice());
         existingProduct.setSellPrice(product.getSellPrice());
-        existingProduct.setStatus(product.getStatus());
+        
+        // Cập nhật quantity trước để trigger logic status update
+        if (product.getQuantity() != existingProduct.getQuantity()) {
+            existingProduct.setQuantity(product.getQuantity());
+        }
+        
+        // Cập nhật status (chỉ khi không phải tự động cập nhật từ quantity)
+        if (product.getStatus() != null) {
+            existingProduct.setStatus(product.getStatus());
+        }
+        
         existingProduct.setCategory(categoryOptional.get());
         existingProduct.setSupplier(supplierOptional.get());
 

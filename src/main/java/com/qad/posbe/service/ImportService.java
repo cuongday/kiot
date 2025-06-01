@@ -270,7 +270,7 @@ public class ImportService {
 
     // Phương thức hỗ trợ chuyển đổi ImportDetail thành ImportDetailResponse
     private ImportDetailResponse mapToImportDetailResponse(ImportDetail detail) {
-        // Map product info
+    // Map product info
         ProductResponse productResponse = ProductResponse.builder()
             .id(detail.getProduct().getId())
             .name(detail.getProduct().getName())
@@ -279,7 +279,7 @@ public class ImportService {
             .sellPrice(detail.getProduct().getSellPrice())
             .quantity(detail.getProduct().getQuantity())
             .image(detail.getProduct().getImage())
-            .status(detail.getProduct().getStatus())
+            .status(detail.getProduct().getStatus() != null ? detail.getProduct().getStatus().toString() : null)
             .date(detail.getProduct().getDate())
             .createdAt(detail.getProduct().getCreatedAt())
             .updatedAt(detail.getProduct().getUpdatedAt())

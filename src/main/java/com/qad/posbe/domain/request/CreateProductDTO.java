@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.qad.posbe.util.constant.ProductStatus;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -28,7 +30,7 @@ public class CreateProductDTO {
     private Long sellPrice;
 
     private Integer quantity;
-    private String status;
+    private ProductStatus status;
     private Instant date;
     @NotNull(message = "Nhà cung cấp không được để trống")
     private Long supplierId;

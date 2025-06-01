@@ -21,6 +21,14 @@ public class GlobalExceptionHandler {
         private int status;
         private String message;
     }
+    
+    @Data
+    @AllArgsConstructor
+    public static class ApiResponse {
+        private Object data;
+        private String error;
+        private String message;
+    }
 
     @ExceptionHandler(InvalidPasswordException.class)
     public ResponseEntity<ErrorResponse> handleInvalidPasswordException(InvalidPasswordException ex) {
@@ -53,5 +61,25 @@ public class GlobalExceptionHandler {
         response.put("path", "");
         
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+    
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse> handleBusinessException(BusinessException ex) {
+        ApiResponse response = new ApiResponse(
+            null,                // data = null
+            ex.getErrorCode(),   // error code
+            ex.getMessage()      // message
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiResponse> handleRuntimeException(RuntimeException ex) {
+        ApiResponse response = new ApiResponse(
+            null,                      // data = null
+            "INTERNAL_SERVER_ERROR",   // error code
+            ex.getMessage()            // message
+        );
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 } 

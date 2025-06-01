@@ -27,6 +27,7 @@ import com.qad.posbe.repository.ProductRepository;
 import com.qad.posbe.repository.UserRepository;
 import com.qad.posbe.util.SecurityUtil;
 import com.qad.posbe.util.constant.PaymentStatus;
+import com.qad.posbe.util.constant.ProductStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,22 +39,34 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final ShiftService shiftService;
 
     @Transactional
     public Order createOrder(CreateOrderDTO createOrderDTO) {
+        // Kiểm tra ca làm việc có mở không
+        if (!shiftService.hasOpenShift()) {
+            throw new com.qad.posbe.util.error.BusinessException(
+                "SHIFT_NOT_OPEN", 
+                "Không thể tạo đơn hàng khi chưa mở ca làm việc. Vui lòng mở ca trước khi bán hàng."
+            );
+        }
+        
         // Get current user
         String currentUsername = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại"));
+                .orElseThrow(() -> new com.qad.posbe.util.error.BusinessException(
+                    "USER_NOT_FOUND", "Không tìm thấy người dùng hiện tại"));
         User currentUser = this.userRepository.findByUsername(currentUsername);
         if (currentUser == null) {
-            throw new RuntimeException("Không tìm thấy người dùng hiện tại");
+            throw new com.qad.posbe.util.error.BusinessException(
+                "USER_NOT_FOUND", "Không tìm thấy người dùng hiện tại");
         }
         
         // Get customer if provided
         Customer customer = null;
         if (createOrderDTO.getCustomerId() != null) {
             customer = this.customerRepository.findById(createOrderDTO.getCustomerId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+                    .orElseThrow(() -> new com.qad.posbe.util.error.BusinessException(
+                        "CUSTOMER_NOT_FOUND", "Không tìm thấy khách hàng"));
         }
         
         // Pre-load all products to avoid multiple database calls
@@ -67,13 +80,32 @@ public class OrderService {
         var productMap = products.stream()
                 .collect(java.util.stream.Collectors.toMap(Product::getId, p -> p));
         
-        // Calculate total price using prices from frontend (OrderItemDTO)
+        // Validate products and calculate total price
         long totalPrice = 0;
         for (OrderItemDTO item : createOrderDTO.getItems()) {
             Product product = productMap.get(item.getProductId());
             if (product == null) {
-                throw new RuntimeException("Không tìm thấy sản phẩm với ID: " + item.getProductId());
+                throw new com.qad.posbe.util.error.BusinessException(
+                    "PRODUCT_NOT_FOUND", "Không tìm thấy sản phẩm với ID: " + item.getProductId());
             }
+            
+            // Kiểm tra trạng thái sản phẩm
+            if (product.getStatus() == ProductStatus.OUT_OF_STOCK) {
+                throw new com.qad.posbe.util.error.BusinessException(
+                    "PRODUCT_OUT_OF_STOCK", "Không thể bán sản phẩm '" + product.getName() + "' vì đã hết hàng");
+            }
+            
+            if (product.getStatus() == ProductStatus.INACTIVE) {
+                throw new com.qad.posbe.util.error.BusinessException(
+                    "PRODUCT_INACTIVE", "Không thể bán sản phẩm '" + product.getName() + "' vì đã ngừng kinh doanh");
+            }
+            
+            // Kiểm tra số lượng tồn kho
+            if (product.getQuantity() < item.getQuantity()) {
+                throw new com.qad.posbe.util.error.BusinessException(
+                    "INSUFFICIENT_STOCK", "Số lượng sản phẩm '" + product.getName() + "' không đủ. Còn lại: " + product.getQuantity());
+            }
+            
             // Use the sellPrice from OrderItemDTO instead of product
             long itemPrice = item.getSellPrice() * item.getQuantity();
             
@@ -109,9 +141,6 @@ public class OrderService {
             
             // Update product stock
             int currentStock = product.getQuantity();
-            if (currentStock < item.getQuantity()) {
-                throw new RuntimeException("Số lượng sản phẩm " + product.getName() + " không đủ");
-            }
             product.setQuantity(currentStock - item.getQuantity());
             productRepository.save(product);
             

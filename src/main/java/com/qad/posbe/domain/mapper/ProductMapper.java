@@ -27,6 +27,7 @@ public interface ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "orderDetails", ignore = true)
     @Mapping(target = "importDetails", ignore = true)
+    @Mapping(source = "date", target = "date")
     Product toEntity(CreateProductDTO dto);
     
     // Cập nhật Product từ UpdateProductDTO
@@ -46,5 +47,6 @@ public interface ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "orderDetails", ignore = true)
     @Mapping(target = "importDetails", ignore = true)
+    @Mapping(target = "date", ignore = true)
     void updateEntityFromDto(UpdateProductDTO dto, @MappingTarget Product product);
 } 
