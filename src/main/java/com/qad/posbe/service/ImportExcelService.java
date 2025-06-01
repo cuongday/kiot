@@ -90,6 +90,15 @@ public class ImportExcelService {
                 
                 int quantity = (int) quantityCell.getNumericCellValue();
                 
+                // Đọc giá nhập từ file Excel (cột thứ 4 - index 3)
+                Cell buyPriceCell = row.getCell(3);
+                if (buyPriceCell == null) {
+                    rowNum++;
+                    continue;
+                }
+                
+                long buyPrice = (long) buyPriceCell.getNumericCellValue();
+                
                 // Lấy thông tin sản phẩm từ database
                 Product product = productRepository.findById(productId)
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
@@ -110,8 +119,12 @@ public class ImportExcelService {
                     );
                 }
                 
-                // Thêm thông tin sản phẩm vào danh sách
-                productInfoList.add(new ImportProductInfo(product, quantity));
+                // Cập nhật giá nhập của sản phẩm từ file Excel
+                product.setBuyPrice(buyPrice);
+                productRepository.save(product);
+                
+                // Thêm thông tin sản phẩm vào danh sách (bao gồm cả giá nhập mới)
+                productInfoList.add(new ImportProductInfo(product, quantity, buyPrice));
                 
                 rowNum++;
             }
@@ -136,8 +149,8 @@ public class ImportExcelService {
                 Product product = info.getProduct();
                 int quantity = info.getQuantity();
                 
-                // Sử dụng giá từ database
-                long price = product.getBuyPrice();
+                // Sử dụng giá nhập từ file Excel (đã được cập nhật)
+                long price = info.getBuyPrice();
                 long productTotalPrice = price * quantity;
                 
                 // Tạo chi tiết nhập hàng
@@ -164,14 +177,16 @@ public class ImportExcelService {
         }
     }
     
-    // Lớp nội bộ để lưu thông tin sản phẩm và số lượng
+    // Lớp nội bộ để lưu thông tin sản phẩm, số lượng và giá nhập
     private static class ImportProductInfo {
         private final Product product;
         private final int quantity;
+        private final long buyPrice;
         
-        public ImportProductInfo(Product product, int quantity) {
+        public ImportProductInfo(Product product, int quantity, long buyPrice) {
             this.product = product;
             this.quantity = quantity;
+            this.buyPrice = buyPrice;
         }
         
         public Product getProduct() {
@@ -180,6 +195,10 @@ public class ImportExcelService {
         
         public int getQuantity() {
             return quantity;
+        }
+        
+        public long getBuyPrice() {
+            return buyPrice;
         }
     }
 } 
